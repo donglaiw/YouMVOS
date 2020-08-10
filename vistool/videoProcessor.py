@@ -7,41 +7,18 @@ import imageio
 from scipy.ndimage import zoom
 import shutil
 
-def writetxt(filename, content):
-    a= open(filename,'w')
-    if isinstance(content, (list,)):
-        for ll in content:
-            a.write(ll)
-            if '\n' not in ll:
-                a.write('\n')
-    else:
-        a.write(content)
-    a.close()
-
-
-def U_mkdir(folder):
-    if not os.path.exists(folder):
-        os.makedirs(folder)
-
-def writegif(outname, vol, ratio=1, duration=0.5):
-    if not isinstance(vol, list):# vol -> list
-        out = [None]*vol.shape[0]
-        for cc in range(vol.shape[0]):
-            if ratio == 1:
-                out[cc] = vol[cc]
-            else:
-                out[cc] = zoom(vol[cc], ratio, order=1)
-    else:
-        if ratio != 1:
-            for cc in range(len(vol)):
-                vol[cc] = zoom(vol[cc], ratio, order=1)
-        out = vol
-    imageio.mimsave(outname, out, 'GIF', duration=duration)
 
 class videoProcessor(object):
     def __init__(self, job_id = 0, job_num = 1, redo = False):
         self.job_id = job_id
         self.job_num = job_num
+        self.redo = redo
+
+    def setSingleProcess(self):
+        self.job_id = 0
+        self.job_num = 1
+
+    def setRedo(self, redo):
         self.redo = redo
 
     def setVideoInfo(self, output_folder, num_frame, fps, export_folder = None):
@@ -57,9 +34,6 @@ class videoProcessor(object):
         else:
             self.export_folder = export_folder + '%s/%s/' % (self.genre_name, self.video_name)
         U_mkdir(self.export_folder)
-
-    def setRedo(self, redo):
-        self.redo = redo
 
     def setGetFrameName(self, getFrameName):
         self.getFrameName = getFrameName

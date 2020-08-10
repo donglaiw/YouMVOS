@@ -1,8 +1,7 @@
 import os,sys
 import numpy as np
 
-sys.path.append('../')
-from T_util import readtxt,U_mkdir
+from T_util import readtxt,U_mkdir,getVideoInfo,checkTxtFormat
 
 opt = sys.argv[1]
 job_id=0;job_num=1;
@@ -16,38 +15,11 @@ Dv='/n/pfister_lab2/Lab/vcg_natural/youtubeE-vis/'
 if opt[0] == '0': # download
     suf = ''
     suf = '_todo'
-    def getVideoInfo(video):
-        import subprocess
-        os.system('ffprobe ' + video + ' > tmp 2>&1')
-        out = readtxt('tmp')
-        info = [oo for oo in out if '[SAR 1:1' in oo][0]
-        info_s = info.split(',')
-        sz = [oo.strip().split(' ')[0] for oo in info_s if '[SAR 1:1' in oo][0]
-        fps = [oo.strip().split(' ')[0] for oo in info_s if 'fps' in oo][0]
-        return sz, fps
-
-    def checkTxtFormat(input_file):
-        videos = readtxt(input_file)
-        for line in videos:
-            tmp = line.split(',')
-            if len(tmp)!=3:
-                raise ValueError('wrong input format: ',line)
 
     input_file = Dv+'data/video%s.txt'%suf
-    checkTxtFormat(input_file)
-    videos = readtxt(input_file)
 
     if opt == '0': # ffmpeg
         # no conda env
-        for line in videos:
-            tmp = [x.strip() for x in line.split(',')]
-            if not os.path.exists(Dv+tmp[0]+'.mp4'):
-                tmp2 = tmp[0].split('/')
-                cmd = "youtube-dl --no-check-certificate -f 136 "+tmp2[1]+" -o "+Dv+tmp2[0]+"/'%(id)s.%(ext)s'"
-                #cmd = "youtube-dl -f best "+tmp2[1]+" -o "+Dv+tmp2[0]+"/'%(id)s.%(ext)s'"
-                print(cmd)
-                U_mkdir(Dv+tmp2[0])
-                os.system(cmd)
     elif opt == '0.1': # check mp4 size
         for line in videos:
             tmp = line.split(',')
