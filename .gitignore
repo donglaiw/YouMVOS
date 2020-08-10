@@ -1,5 +1,7 @@
 *pyc
 *~
-tmp/
-__pycache__/
-db/
+tmp
+tmp_run.sh
+.*
+__pycache__
+db
