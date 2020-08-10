@@ -1,0 +1,2 @@
+from .proofread_shot import template_proofread_shot
+from .proofread_seg import template_proofread_seg
