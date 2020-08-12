@@ -1,0 +1,15 @@
+README.md
+setup.py
+vidtool/__init__.py
+vidtool/videoBasic.py
+vidtool/videoDownloader.py
+vidtool/videoProcessor.py
+vidtool/videoProofreader.py
+vidtool/videoUtil.py
+vidtool.egg-info/PKG-INFO
+vidtool.egg-info/SOURCES.txt
+vidtool.egg-info/dependency_links.txt
+vidtool.egg-info/top_level.txt
+vidtool/template/__init__.py
+vidtool/template/proofread_seg.py
+vidtool/template/proofread_shot.py

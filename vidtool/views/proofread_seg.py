@@ -1,4 +1,4 @@
-template_proofread_seg = """{
+vsvi_proofread_seg = """{
   "Comment": "%s",
   "ServerType": "imagetiles",
 

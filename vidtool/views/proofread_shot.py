@@ -1,4 +1,4 @@
-template_proofread_shot = """
+html_proofread_shot = """
 <script src="../../jquery-1.7.1.min.js"></script>
 Shot starting IDs: <textarea id="shot" cols=50 rows=10></textarea> (separated by comma)
 <br/>
@@ -13,8 +13,13 @@ Shot starting IDs: <textarea id="shot" cols=50 rows=10></textarea> (separated by
 <script>
 var shot_start = [0];
 var shot_selection = [0];
-var genre_name = "%s";
 var video_name = "%s";
+var genre_name = "./";
+var video_url = video_name;
+if (video_name.includes('/')){
+    genre_name = video_name.substr(0, video_name.lastIndexOf('/'));
+    video_url = video_name.substr(video_name.lastIndexOf('/') + 1);
+}
 var num = %d;
 var fps = %d;
 var numCol = 6;
@@ -24,7 +29,7 @@ load_js()
 
 function getImName(i){
     var im_id = 1 + (i * fps)
-    var fn = "../../download/" + genre_name + "/" + video_name + "/image_";
+    var fn = "../" + video_url + "/image_";
     if(im_id<10){
         fn += '0000'+im_id;
     }else if(im_id<100){
@@ -118,7 +123,7 @@ $("#shot").change(function(){
 
 // init
 function get_js_name(same_folder){
-    var out = video_name + '_shot.js';
+    var out = video_url + '_shot.js';
     if (! same_folder){
         out = genre_name + '/saved/' + out
     } else {
@@ -150,7 +155,7 @@ $("#sub").click(function(){
     document.getElementById("ans").value = 'var shot_start_str="'+ans_out+'";var shot_selection_str="'+shot_selection+'"';
     document.getElementById("folder").value = get_js_name(false);
     tmp = $.post("../../save_ans.php", $("#mturk_form").serialize(), function(data) {
-        window.location='http://140.247.107.50/donglai/movie/';
+        window.location=window.location.href.substring(0, window.location.href.lastIndexOf("/");
         });
   });
 </script>

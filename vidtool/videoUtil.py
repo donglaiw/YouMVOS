@@ -2,6 +2,14 @@ import os
 import subprocess
 import imageio
 
+def checkVideoTxt(input_file):
+    # genre/video_url, author, title 
+    videos = readtxt(input_file)
+    for line in videos:
+        tmp = line.split(',')
+        if len(tmp) != 3:
+            print("each line should be: genre/video_url, author, title") 
+            raise ValueError('Wrong input format: ', line)
 
 
 def readtxt(filename):
@@ -10,7 +18,7 @@ def readtxt(filename):
     a.close()
     return content
 
-def U_mkdir(fn, opt = 0):
+def mkdir(fn, opt = 0):
     if opt == 1: 
         # Create the folder that the file is in.
         fn = fn[:fn.rfind('/')]
@@ -42,5 +50,3 @@ def writegif(outname, vol, ratio=1, duration=0.5):
                 vol[cc] = zoom(vol[cc], ratio, order=1)
         out = vol
     imageio.mimsave(outname, out, 'GIF', duration=duration)
-
-

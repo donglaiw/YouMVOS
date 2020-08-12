@@ -1,0 +1,6 @@
+{
+    "DATA_FOLDER" : "/mnt/pfister_lab2/vcg_natural/youtubeE-vis/",
+    "WEB_FOLDER" : "/var/www/html/donglai/movie/",
+    "SHARE_FOLDER" : "/home/donglai/google-drive/YouTubeTop-vis/",
+    "DETECTRON2_FOLDER" : "/n/pfister_lab2/Lab/donglai/lib/pipeline/detectron2/" 
+}

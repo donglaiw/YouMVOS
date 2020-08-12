@@ -6,44 +6,11 @@ from skimage.color import label2rgb
 import imageio
 from scipy.ndimage import zoom
 import shutil
+from .videoBasic import videoBasic
 
-
-class videoProcessor(object):
+class videoProcessor(videoBasic):
     def __init__(self, job_id = 0, job_num = 1, redo = False):
-        self.job_id = job_id
-        self.job_num = job_num
-        self.redo = redo
-
-    def setSingleProcess(self):
-        self.job_id = 0
-        self.job_num = 1
-
-    def setRedo(self, redo):
-        self.redo = redo
-
-    def setVideoInfo(self, output_folder, num_frame, fps, export_folder = None):
-        self.output_folder = output_folder
-        index_last = output_folder[:-1].rfind('/')
-        index_second_last = output_folder[:index_last-1].rfind('/')
-        self.genre_name = output_folder[index_second_last + 1 : index_last]
-        self.video_name = output_folder[index_last + 1 : -1]
-        self.num_frame = num_frame
-        self.fps = int(np.round(fps))
-        if export_folder is None:
-            self.export_folder = self.output_folder + 'www/' 
-        else:
-            self.export_folder = export_folder + '%s/%s/' % (self.genre_name, self.video_name)
-        U_mkdir(self.export_folder)
-
-    def setGetFrameName(self, getFrameName):
-        self.getFrameName = getFrameName
-
-    def getFrame(self, frame_id):
-        return imageio.imread(self.getFrameName(frame_id))
-
-    def getFrameNameLocal(self, frame_id):
-        name = self.getFrameName(frame_id)
-        return name[name.rfind('/')+1:]
+        super().__init__(job_id, job_num, redo)
 
     def getStat(self, stat):
         stat_path = self.output_folder+'%s.txt'%stat
@@ -60,7 +27,7 @@ class videoProcessor(object):
 
         frame_size = np.array(self.getFrame(0).shape)
         frame_size[:2] = (frame_size[:2] + frame_downsample - 1) // frame_downsample
-        frame_ids = np.arange(0, self.num_frame, frame_rate)
+        frame_ids = np.arange(0, self.frame_num, frame_rate)
         for frame_id in frame_ids[self.job_id :: self.job_num]:
             output_file = output_folder + self.getFrameNameLocal(frame_id)
             if not os.path.exists(output_file):
@@ -82,7 +49,7 @@ class videoProcessor(object):
             writegif(output_file, output, duration = frame_duration)
 
     def computeMaxDiff(self, frame_downsample=4):
-        num_per_job = (self.num_frame + self.job_num - 1) // self.job_num
+        num_per_job = (self.frame_num + self.job_num - 1) // self.job_num
         
         if self.job_num != 1: # for long movies
             output_path_max = self.output_folder+'rgb_max/'
@@ -100,9 +67,9 @@ class videoProcessor(object):
         do_diff = not os.path.exists(output_file_diff)
         if do_max or do_diff:
             # not using the last frame
-            frame_range = range(self.job_id * num_per_job, min((self.job_id + 1) * num_per_job, self.num_frame-1))
+            frame_range = range(self.job_id * num_per_job, min((self.job_id + 1) * num_per_job, self.frame_num-1))
             output_diff = np.zeros(len(frame_range), int)
-            if frame_range[-1]==self.num_frame-2:
+            if frame_range[-1]==self.frame_num-2:
                 output_max = np.zeros(len(frame_range)+1, int)
             else:
                 output_max = np.zeros(len(frame_range), int)
@@ -114,7 +81,7 @@ class videoProcessor(object):
                 output_diff[i] = np.abs(frame_current - frame_next).mean()
                 frame_current[:] = frame_next
 
-            if frame_range[-1]==self.num_frame-2:
+            if frame_range[-1]==self.frame_num-2:
                 output_max[-1] = frame_next.max()
 
             np.savetxt(output_file_max, output_max, '%d')
@@ -135,9 +102,9 @@ class videoProcessor(object):
                     if job_num != num_result:
                        raise ValueError('Missing %d Files'%(job_num-num_result))
                     else:
-                        output_len = self.num_frame
+                        output_len = self.frame_num
                         if name == 'rgb_diff':
-                            output_len = self.num_frame - 1
+                            output_len = self.frame_num - 1
                         output = np.zeros(output_len, int)
                         start_id = 0
                         for job_id in range(job_num):
@@ -189,25 +156,21 @@ class videoProcessor(object):
             
             np.savetxt(output_path, np.vstack(output), '%d')
 
-    def proofreadShot(self, frame_rate = -1):
-        if frame_rate < 0 :
-            frame_rate = self.fps
-        from template import template_proofread_shot
-        output_shot_js = self.export_folder+'%s_shot.js' % (self.video_name)
-        if self.redo or not os.path.exists(output_shot_js):
-            shots = np.loadtxt(self.output_folder+'shot.txt').astype(int)
-            # Take the ceil for the start frame.
-            # Can be repeated due to overlap
-            shots = np.unique((shots[:, 0] + frame_rate - 1) // frame_rate)
-            output_var = 'var shot_start_str="'+','.join([str(x) for x in shots])+'";'
-            output_var += 'var shot_selection_str="'+','.join([str(0) for x in shots])+'";'
-            writetxt(output_shot_js, output_var)
+    def computeDetectron2Seg(self, detectron2_folder, output_folder = None, frame_index = None):
+        # https://github.com/donglaiw/detectron2
+        if frame_index is None:
+            frame_index = np.arange(0, self.video_frame_num, self.video_frame_rate).astype(int)
+        if output_folder is None:
+            output_folder = self.video_share_folder + 'seg_det2/'
 
-        output_shot_html = self.export_folder+'%s_shot.html' % (self.video_name)
-        if self.redo or not os.path.exists(output_shot_html):
-            output = template_proofread_shot % (self.genre_name, self.video_name, (self.num_frame + self.fps) // self.fps, self.fps)
-            writetxt(output_shot_html, output)
- 
+        cmd = 'python ' + detectron2_folder + 'demo/demo_dw.py --config-file  ' + detectron2_folder + 'configs/COCO-InstanceSegmentation/mask_rcnn_R_50_FPN_3x.yaml --input-template %s --input-index %s --output %s --opts MODEL.WEIGHTS detectron2://COCO-InstanceSegmentation/mask_rcnn_R_50_FPN_3x/137849600/model_final_f10217.pkl'
+        frame_index_str = ','.join([str(x) for x in frame_index])
+        outputs = D0+'db/detectron2/'+video+'/seg/_s%05d.png' 
+        U_mkdir(outputs[:outputs.rfind('/')], 2)
+        cmds += [cmd % (inputs_folder, inputs_index, outputs)]
+        if video == video_todo[-1]:
+            writetxt('tmp_run.sh', ['#/bin/bash']+cmds)
+
     def visualizeShot(self, frame_downsample = 4, num_gif_frame = 5, frame_duration = 0.2):
         output_folder = self.export_folder+'shot/'
         if self.job_id == 0: # avoid multiple thread conflicts
@@ -236,7 +199,7 @@ class videoProcessor(object):
             result_files = sorted(glob(self.output_folder+'result/*.png'))
             assert len(result_frame_id) == len(result_files)
         
-            frame_ids = np.arange(0, self.num_frame, self.fps)
+            frame_ids = np.arange(0, self.frame_num, self.fps)
             frame_size = np.array(self.getFrame(0).shape)
             frame_size[:2] = (frame_size[:2] + frame_downsample - 1) // frame_downsample
             output = np.zeros([len(frame_ids)] + list(frame_size), np.uint8)
@@ -255,33 +218,4 @@ class videoProcessor(object):
                 output[i] = im
             writegif(output_file, output, duration = frame_duration)
 
-    def proofreadSeg(self, frame_rate = -1):
-        # Output im.vsvi and seg.vsvi for VAST-lite proofreading
-        if frame_rate < 0 :
-            frame_rate = self.fps
-        from template import template_proofread_seg
-        frame_ids = np.arange(0, self.num_frame, self.fps)
-        # output vsvi
-        vsvi_type = ['im','seg']
-        vsvi_filename = ['image_%05d.png','seg_%05d.png']
-        for vsvi_id in range(len(vsvi_type)):
-            output_vsvi = self.export_folder+'%s.vsvi' % (vsvi_type[vsvi_id])
-            # ffmpeg starts from id=1
-            frame_ids_str = ','.join([str(1 + x) for x in frame_ids])
-            frame_size = np.array(self.getFrame(0).shape)
-            if True:#not os.path.exists(output_vsvi):
-                meta = "%s-%s %s" % (self.genre_name, self.video_name, vsvi_type[vsvi_id])
-                image_template = r'.\%s\%s' % (vsvi_type[vsvi_id], vsvi_filename[vsvi_id])
-                output = template_proofread_seg % (meta, image_template, 0, \
-                                                   image_template, frame_size[1], frame_size[0], \
-                                                   frame_ids_str, frame_size[1], frame_size[0], \
-                                                   len(frame_ids), meta)
-                writetxt(output_vsvi, output)
-        # copy frames
-        output_folder = self.export_folder+'im/'
-        U_mkdir(output_folder)
-        for frame_id in frame_ids:
-            frame_name = self.getFrameName(frame_id)
-            output_image = output_folder + frame_name[frame_name.rfind('/')+1:]
-            if not os.path.exists(output_image):
-                shutil.copy(frame_name, output_image)
+

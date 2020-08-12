@@ -30,7 +30,7 @@ class videoDownloader(object):
             self.video_genres[line_id] = tmp[0]
             self.video_urls[line_id] = tmp[1]
 
-    def getVideoInfo(self, video_url):
+    def getVideoInfo(video_url):
         output_file = 'tmp/ccv_%d' % self.job_id 
         os.system('ffprobe %s > %s 2>&1' % (video_url, output_file))
         os_out = readtxt(output_file)
@@ -39,15 +39,6 @@ class videoDownloader(object):
         sz = [x.strip().split(' ')[0] for x in info_s if '[SAR 1:1' in x][0]
         fps = [x.strip().split(' ')[0] for x in info_s if 'fps' in x][0]
         return sz, fps
-
-    def checkVideoListFormat(self, input_file):
-        # genre, video_url, author, title 
-        videos = readtxt(input_file)
-        for line in videos:
-            tmp = line.split(',')
-            if len(tmp) != 4:
-                print("each line should be: genre, video_url, author, title") 
-                raise ValueError('Wrong input format: ', line)
 
     def checkVideoSize(self, input_file):
         for line in videos:
