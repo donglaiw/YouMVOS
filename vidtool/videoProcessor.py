@@ -156,18 +156,17 @@ class videoProcessor(videoBasic):
             
             np.savetxt(output_path, np.vstack(output), '%d')
 
-    def computeDetectron2Seg(self, detectron2_folder, output_folder = None, frame_index = None):
+    def computeDetectron2Seg(self, frame_index = 0, detectron2_folder, output_folder = None, shot_js = None):
         # https://github.com/donglaiw/detectron2
-        if frame_index is None:
-            frame_index = np.arange(0, self.video_frame_num, self.video_frame_rate).astype(int)
+        if isinstance(frame_index, int):
+            frame_index, frame_suf = self.getFrameIndex(frame_index, shot_js)
         if output_folder is None:
-            output_folder = self.video_share_folder + 'seg_det2/'
+            output_folder = self.video_share_folder + 'seg%s/' % frame_suf
+        vtuil.mkdir(output_folder)
 
         cmd = 'python ' + detectron2_folder + 'demo/demo_dw.py --config-file  ' + detectron2_folder + 'configs/COCO-InstanceSegmentation/mask_rcnn_R_50_FPN_3x.yaml --input-template %s --input-index %s --output %s --opts MODEL.WEIGHTS detectron2://COCO-InstanceSegmentation/mask_rcnn_R_50_FPN_3x/137849600/model_final_f10217.pkl'
         frame_index_str = ','.join([str(x) for x in frame_index])
-        outputs = D0+'db/detectron2/'+video+'/seg/_s%05d.png' 
-        U_mkdir(outputs[:outputs.rfind('/')], 2)
-        cmds += [cmd % (inputs_folder, inputs_index, outputs)]
+        cmds += [cmd % (inputs_folder, frame_index_str, output_folder + '_s%05d.png')]
         if video == video_todo[-1]:
             writetxt('tmp_run.sh', ['#/bin/bash']+cmds)
 

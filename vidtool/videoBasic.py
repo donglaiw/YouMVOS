@@ -84,3 +84,50 @@ class videoBasic(object):
                     imageio.imwrite(frame_name_out, output)
                 else:
                     shutil.copy(frame_name_in, frame_name_out)
+
+    def getFrameIndex(self, option = 0, shot_js = None):
+        frames = np.arange(0, self.video_frame_num, self.video_frame_rate)
+        if option == 0:
+            # All frames
+            frame_suf = '_all'
+            return frames
+        else:
+            if shot_js is None:
+                # default in the www/ folder
+                shot_js = self.video_web_folder + '../saved/%s_shot.js' % (self.video_url)
+            elif shot_js[-1] == '/':
+                # only provide the folder
+                shot_js = shot_js + '%s_shot.js' % (self.video_url)
+            shot_info = vutil.readtxt(shot_js)[0]
+            shot_start = [int(x) for x in shot_info[shot_info.find('=')+2:shot_info.find(';')-1].split(',')] 
+            shot_start += [len(frames) - 1]
+            shot_selection = np.array([int(x) for x in shot_info[shot_info.rfind('=')+2:-2].split(',')]) 
+            if option == -1: 
+                # Boundary frames in selected shots
+                frame_suf = '_shot_bd'
+                frame_id = []
+                for shot_id in np.where(shot_selection == 0)[0]:
+                    frame_id += [shot_start[shot_id], shot_start[shot_id+1] - 1]
+            elif option == -2: 
+                # All frames in selected shots
+                frame_suf = '_shot'
+                for shot_id in np.where(shot_selection == 0)[0]:
+                    frame_id += range(shot_start[shot_id], shot_start[shot_id+1])
+            return frames[frame_id], frame_suf
+
+    # shot-level filenames
+    def getShotTxt(self, shot_folder = None):
+        if shot_folder is None:
+            shot_folder = self.video_data_folder
+        return shot_folder + 'shot.txt'
+    def getShotJs(self, shot_folder = None):
+        if shot_folder is None:
+            shot_folder = self.video_web_folder + '../saved/'
+        return shot_folder + '%s_shot.js' % (self.video_url)
+    def getShotHtml(self, shot_folder = None):
+        if shot_folder is None:
+            shot_folder = self.video_web_folder + '../test/'
+        return shot_folder + '%s_shot.html' % (self.video_url)
+
+
+

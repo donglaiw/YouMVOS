@@ -29,6 +29,12 @@ if __name__ == "__main__":
         elif opt == '0.1':
             # Generate htmls/js
             vpf.webProofreadShot()
+        elif opt == '0.2':
+            # Copy final js result: web -> data
+            js_in = vp.getShotJS()
+            js_out = vp.getShotJS(vp.video_data_folder)
+            import pdb; pdb.set_trace()
+            shutil.copy(js_in, js_out)
 
         # Set up desktop (VAST) proofreading
         elif opt == '1':
