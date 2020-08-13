@@ -56,10 +56,6 @@ class videoBasic(object):
         self.video_web_folder = self.web_folder + '/' + self.video_name + '/'
         self.video_share_folder = self.share_folder + '/' + self.video_name + '/'
 
-        vutil.mkdir(self.video_data_folder)
-        vutil.mkdir(self.video_web_folder)
-        vutil.mkdir(self.video_share_folder)
-
     def setGetFrameName(self, getFrameName = None):
         if getFrameName is None:
             def getFrameName(frame_id):
