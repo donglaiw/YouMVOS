@@ -1,4 +1,4 @@
-import os,sys
+import os,sys,shutil
 import json
 from vidtool.videoProcessor import videoProcessor
 from vidtool import videoUtil as vutil
@@ -14,8 +14,6 @@ if __name__ == "__main__":
     param = json.load(open('data/param.json'))
     vp = videoProcessor(job_id, job_num)
     data_folder = param['DATA_FOLDER']
-    # rc cluster
-    data_folder = data_folder.replace('/mnt/pfister_lab2/','/n/pfister_lab2/Lab/')
     web_folder = param['WEB_FOLDER']
     share_folder = param['SHARE_FOLDER']
     detectron2_folder = param['DETECTRON2_FOLDER']
@@ -23,8 +21,9 @@ if __name__ == "__main__":
     vp.setFolders(data_folder, web_folder, share_folder)
     vp.setInputVideoJson('data/video_todo.json')
 
-    
-    for vid,video_name in enumerate(vp.video_all_name):
+    for vid,video_name in enumerate(vp.video_all_name[job_id::job_num]):
+        if vid == 0:
+            continue
         print('process video: ', video_name)
         vp.setVideoInfo(video_name)
         # Set up the web proofreading for shot detection and classification

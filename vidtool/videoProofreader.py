@@ -23,11 +23,7 @@ class videoProofreader(videoBasic):
         if self.redo or not os.path.exists(output_shot_js):
             input_shot_file = self.getShotTxt(input_shot_txt)
             shots = np.loadtxt(input_shot_file).astype(int)
-            # Take the ceil for the start frame.
-            # Can be repeated due to frame_rate downsample
-            shots = np.unique((shots[:, 0] + frame_rate - 1) // frame_rate)
-            output_var = 'var shot_start_str="'+','.join([str(x) for x in shots])+'";'
-            output_var += 'var shot_selection_str="'+','.join([str(0) for x in shots])+'";'
+            output_var = self.convertShotArrToJs(shots, frame_rate)
             vutil.writetxt(output_shot_js, output_var)
 
         output_shot_html = self.getShotHtml(output_shot_folder)
@@ -37,8 +33,10 @@ class videoProofreader(videoBasic):
 
     def vastProofreadSeg(self, frame_index = 0, shot_js = None, output_folder = None):
         # Output im.vsvi and seg.vsvi for VAST-lite proofreading
-        frame_index = self.getKeyframeIndex(frame_index, shot_js)
         frame_suf = self.getKeyframeSuf(frame_index)
+        if isinstance(frame_index, int):
+            # frame_index is the option
+            frame_index = self.getKeyframeIndex(frame_index, shot_js)
 
         # ffmpeg starts from id=1
         frame_index_str = ','.join([str(1 + x) for x in frame_index])

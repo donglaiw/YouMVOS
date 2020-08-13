@@ -6,3 +6,4 @@ tmp_run.sh
 __pycache__
 db
 LOG
+data/param.json

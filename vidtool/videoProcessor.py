@@ -1,11 +1,10 @@
-import os
+import os,shutil
 import numpy as np
 from glob import glob
 from skimage.measure import label
 from skimage.color import label2rgb
 import imageio
 from scipy.ndimage import zoom
-import shutil
 
 from .videoBasic import videoBasic
 from . import videoUtil as vutil

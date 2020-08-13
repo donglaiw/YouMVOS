@@ -1,6 +1,7 @@
 import os,sys,shutil
 import json
 from vidtool.videoProofreader import videoProofreader
+import numpy as np
 
 if __name__ == "__main__":
     opt = sys.argv[1]
@@ -36,13 +37,24 @@ if __name__ == "__main__":
             shutil.copy(js_in, js_out)
 
         # Set up desktop (VAST) proofreading
-        elif opt == '1':
+        elif opt == '1': # copy video info
+            file_in = 'data/video.json'
+            folder_out = vp.share_folder
+            shutil.copy(file_in, folder_out)
+        elif opt == '1.1':
             # Prepage images
             vp.copyFrames(vp.video_share_folder + 'im/')
-        elif opt == '1.1':
+        elif opt == '1.2':
             # Generate vsvi files for VAST
             vp.setRedo(True)
             vp.vastProofreadSeg(frame_index = 1)
+        elif opt == '1.3':
+            # Generate shot.txt from shot.js
+            js_out = vp.getShotTxt(vp.video_share_folder)
+            if not os.path.exists(js_out):
+                js_in = vp.getShotJs()
+                shots, shot_selection = vp.convertShotJsToArr(js_in, 2)
+                np.savetxt(js_out, shots[shot_selection == 0], '%d')
 
         elif opt == '2':
             f0 = vp.video_name[:vp.video_name.find('/')]
