@@ -36,10 +36,14 @@ if __name__ == "__main__":
             cmd_file = 'db/tmp.sh'
             if vid == 0:
                 vutil.writetxt(cmd_file, ['#/bin/bash'])
-            vp.computeDetectron2Seg(detectron2_folder, -1, \
-                                    output_folder = vp.video_data_folder + 'seg_shot_bd/', \
+            vp.computeDetectron2Seg(detectron2_folder, 1, \
+                                    output_folder = vp.getKeyframeSegmentFolder(vp.video_data_folder, 1), \
                                     shot_file = vp.video_data_folder,
                                     cmd_file = cmd_file)
+        elif opt == '1.1': # copy seg result: data_folder -> share_folder
+            seg_in = vp.getKeyframeSegmentFolder(vp.video_data_folder, 1)
+            seg_out = vp.getKeyframeSegmentFolder(vp.video_share_folder, 1)
+            shutil.copytree(seg_in, seg_out)
         elif opt == '2':
             f0 = vp.video_name[:vp.video_name.find('/')]
             f1 = vp.video_name[vp.video_name.find('/')+1:]

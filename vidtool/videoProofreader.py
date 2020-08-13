@@ -37,9 +37,9 @@ class videoProofreader(videoBasic):
 
     def vastProofreadSeg(self, frame_index = 0, shot_js = None, output_folder = None):
         # Output im.vsvi and seg.vsvi for VAST-lite proofreading
-        frame_suf = ''
-        if isinstance(frame_index, int):
-            frame_index, frame_suf = self.getFrameIndex(frame_index, shot_js)
+        frame_index = self.getKeyframeIndex(frame_index, shot_js)
+        frame_suf = self.getKeyframeSuf(frame_index)
+
         # ffmpeg starts from id=1
         frame_index_str = ','.join([str(1 + x) for x in frame_index])
         frame_size = np.array(self.getFrame(0).shape)

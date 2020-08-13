@@ -80,37 +80,54 @@ class videoBasic(object):
                 else:
                     shutil.copy(frame_name_in, frame_name_out)
 
-    def getFrameIndex(self, option = 0, shot_folder = None):
-        frames = np.arange(0, self.video_frame_num, self.video_frame_rate)
-        if option == 0:
-            # All frames
-            frame_suf = '_all'
-            return frames
-        else:
-            shot_js = self.getShotJs(shot_folder)
-            shot_info = vutil.readtxt(shot_js)[0]
-            shot_start = [int(x) for x in shot_info[shot_info.find('=')+2:shot_info.find(';')-1].split(',')] 
-            shot_start += [len(frames) - 1]
-            shot_selection = np.array([int(x) for x in shot_info[shot_info.rfind('=')+2:-2].split(',')]) 
-            if option == -1: 
-                # Boundary frames in selected shots
-                frame_suf = '_shot_bd'
-                frame_id = []
-                for shot_id in np.where(shot_selection == 0)[0]:
-                    frame_id += [shot_start[shot_id], shot_start[shot_id+1] - 1]
-                # Exist single-frame shots
-                frame_id = np.unique(frame_id)
-            elif option == -2: 
-                # All frames in selected shots
-                frame_suf = '_shot'
-                for shot_id in np.where(shot_selection == 0)[0]:
-                    frame_id += range(shot_start[shot_id], shot_start[shot_id+1])
-            return frames[frame_id], frame_suf
+    # Different sets of keyframes.
+    def getKeyframeSuf(self, frame_index = 0):
+        frame_suf = ''
+        if isinstance(frame_index, int):
+            frame_suf = ['_all', '_shot_bd', '_shot'][frame_index]
+        return frame_suf
 
-    # shot-level filenames
+    def getKeyframeSegmentFolder(self, output_folder = None, frame_index = 0):
+        frame_suf = self.getKeyframeSuf(frame_index)
+        if output_folder is None:
+            output_folder = self.video_share_folder
+        output_folder += 'seg%s/' % frame_suf
+        return output_folder
+
+    def getKeyframeIndex(self, frame_index = 0, shot_folder = None):
+        # returninput can either be the input frame index
+        # or the frame_index for the pre-defined frame index
+        if not isinstance(frame_index, int):
+            return frame_index
+        else:
+            frames = np.arange(0, self.video_frame_num, self.video_frame_rate)
+            if frame_index == 0:
+                # All frames
+                return frames
+            else:
+                shot_js = self.getShotJs(shot_folder)
+                shot_info = vutil.readtxt(shot_js)[0]
+                shot_start = [int(x) for x in shot_info[shot_info.find('=')+2:shot_info.find(';')-1].split(',')] 
+                shot_start += [len(frames) - 1]
+                shot_selection = np.array([int(x) for x in shot_info[shot_info.rfind('=')+2:-2].split(',')]) 
+                if frame_index == 1: 
+                    # Boundary frames in selected shots
+                    frame_id = []
+                    for shot_id in np.where(shot_selection == 0)[0]:
+                        frame_id += [shot_start[shot_id], shot_start[shot_id+1] - 1]
+                    # Exist single-frame shots
+                    frame_id = np.unique(frame_id)
+                elif frame_index == 2: 
+                    # All frames in selected shots
+                    for shot_id in np.where(shot_selection == 0)[0]:
+                        frame_id += range(shot_start[shot_id], shot_start[shot_id+1])
+                return frames[frame_id]
+
+    # Shot-related files.
     def getShotTxt(self, shot_file = None):
         if shot_file is None:
             shot_file = self.video_data_folder
+        # input folder -> filename 
         if shot_file[-1] == '/':
             shot_file += 'shot.txt'
         return shot_file
@@ -118,6 +135,7 @@ class videoBasic(object):
     def getShotJs(self, shot_file = None):
         if shot_file is None:
             shot_file = self.video_web_folder + '../saved/'
+        # input folder -> filename 
         if shot_file[-1] == '/':
             shot_file += '%s_shot.js' % (self.video_url)
         return shot_file
@@ -125,9 +143,7 @@ class videoBasic(object):
     def getShotHtml(self, shot_file = None):
         if shot_file is None:
             shot_file = self.video_web_folder + '../test/'
+        # input folder -> filename 
         if shot_file[-1] == '/':
             shot_file += '%s_shot.html' % (self.video_url)
         return shot_file
-
-
-

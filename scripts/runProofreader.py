@@ -42,7 +42,7 @@ if __name__ == "__main__":
         elif opt == '1.1':
             # Generate vsvi files for VAST
             vp.setRedo(True)
-            vp.vastProofreadSeg(frame_index = -1)
+            vp.vastProofreadSeg(frame_index = 1)
 
         elif opt == '2':
             f0 = vp.video_name[:vp.video_name.find('/')]

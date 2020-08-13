@@ -162,15 +162,13 @@ class videoProcessor(videoBasic):
                              input_folder = None, output_folder = None, \
                              shot_file = None, cmd_file = None):
         # https://github.com/donglaiw/detectron2
-        if isinstance(frame_index, int):
-            frame_index, frame_suf = self.getFrameIndex(frame_index, shot_file)
-            frame_index += 1 # ffmpeg
-            import pdb; pdb.set_trace()
+        frame_index = self.getKeyframeIndex(frame_index, shot_file)
+        frame_index += 1 # ffmpeg
 
         if input_folder is None:
             input_folder = self.getFrameName(-1)
         if output_folder is None:
-            output_folder = self.video_share_folder + 'seg%s/' % frame_suf
+            output_folder = self.getKeyframeSegmentFolder(frame_index = frame_index)
         vutil.mkdir(output_folder)
 
         cmd = 'python ' + detectron2_folder + 'demo/demo_dw.py --config-file  ' + detectron2_folder + 'configs/COCO-InstanceSegmentation/mask_rcnn_R_50_FPN_3x.yaml --input-template %s --input-index %s --output %s --opts MODEL.WEIGHTS detectron2://COCO-InstanceSegmentation/mask_rcnn_R_50_FPN_3x/137849600/model_final_f10217.pkl\n'
