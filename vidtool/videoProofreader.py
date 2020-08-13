@@ -14,13 +14,14 @@ class videoProofreader(videoBasic):
         super().__init__(job_id, job_num, redo)
     
 
-    def webProofreadShot(self, input_shot_file = None, output_shot_folder = None, frame_rate = -1):
+    def webProofreadShot(self, input_shot_txt = None, output_shot_folder = None, frame_rate = -1):
+        # Convert shot_txt into js and html
         if frame_rate < 0 :
             frame_rate = self.video_frame_rate
 
         output_shot_js = self.getShotJs(output_shot_folder)
         if self.redo or not os.path.exists(output_shot_js):
-            input_shot_file = self.getShotTxt(input_shot_file)
+            input_shot_file = self.getShotTxt(input_shot_txt)
             shots = np.loadtxt(input_shot_file).astype(int)
             # Take the ceil for the start frame.
             # Can be repeated due to frame_rate downsample

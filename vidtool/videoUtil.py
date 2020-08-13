@@ -25,8 +25,8 @@ def mkdir(fn, opt = 0):
     if not os.path.exists(fn):
         os.makedirs(fn)
 
-def writetxt(filename, content):
-    a= open(filename,'w')
+def writetxt(filename, content, mode='w'):
+    a= open(filename, mode)
     if isinstance(content, (list,)):
         for ll in content:
             if '\n' not in ll:

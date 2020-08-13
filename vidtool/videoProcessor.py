@@ -6,7 +6,9 @@ from skimage.color import label2rgb
 import imageio
 from scipy.ndimage import zoom
 import shutil
+
 from .videoBasic import videoBasic
+from . import videoUtil as vutil
 
 class videoProcessor(videoBasic):
     def __init__(self, job_id = 0, job_num = 1, redo = False):
@@ -156,19 +158,26 @@ class videoProcessor(videoBasic):
             
             np.savetxt(output_path, np.vstack(output), '%d')
 
-    def computeDetectron2Seg(self, frame_index = 0, detectron2_folder, output_folder = None, shot_js = None):
+    def computeDetectron2Seg(self, detectron2_folder, frame_index = 0, \
+                             input_folder = None, output_folder = None, \
+                             shot_file = None, cmd_file = None):
         # https://github.com/donglaiw/detectron2
         if isinstance(frame_index, int):
-            frame_index, frame_suf = self.getFrameIndex(frame_index, shot_js)
+            frame_index, frame_suf = self.getFrameIndex(frame_index, shot_file)
+
+        if input_folder is None:
+            input_folder = self.getFrameName(-1)
         if output_folder is None:
             output_folder = self.video_share_folder + 'seg%s/' % frame_suf
-        vtuil.mkdir(output_folder)
+        vutil.mkdir(output_folder)
 
-        cmd = 'python ' + detectron2_folder + 'demo/demo_dw.py --config-file  ' + detectron2_folder + 'configs/COCO-InstanceSegmentation/mask_rcnn_R_50_FPN_3x.yaml --input-template %s --input-index %s --output %s --opts MODEL.WEIGHTS detectron2://COCO-InstanceSegmentation/mask_rcnn_R_50_FPN_3x/137849600/model_final_f10217.pkl'
+        cmd = 'python ' + detectron2_folder + 'demo/demo_dw.py --config-file  ' + detectron2_folder + 'configs/COCO-InstanceSegmentation/mask_rcnn_R_50_FPN_3x.yaml --input-template %s --input-index %s --output %s --opts MODEL.WEIGHTS detectron2://COCO-InstanceSegmentation/mask_rcnn_R_50_FPN_3x/137849600/model_final_f10217.pkl\n'
         frame_index_str = ','.join([str(x) for x in frame_index])
-        cmds += [cmd % (inputs_folder, frame_index_str, output_folder + '_s%05d.png')]
-        if video == video_todo[-1]:
-            writetxt('tmp_run.sh', ['#/bin/bash']+cmds)
+        cmd = cmd % (input_folder, frame_index_str, output_folder + '_s%05d.png')
+        if cmd_file is None:
+            print(cmd)
+        else:
+            vutil.writetxt(cmd_file, cmd, 'a')
 
     def visualizeShot(self, frame_downsample = 4, num_gif_frame = 5, frame_duration = 0.2):
         output_folder = self.export_folder+'shot/'

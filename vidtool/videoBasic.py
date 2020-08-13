@@ -13,7 +13,6 @@ class videoBasic(object):
 
         self.video_all_info = None
         self.video_all_name = None
-        self.setGetFrameName()
     
     def setSingleProcess(self):
         self.job_id = 0
@@ -56,11 +55,11 @@ class videoBasic(object):
         self.video_web_folder = self.web_folder + '/' + self.video_name + '/'
         self.video_share_folder = self.share_folder + '/' + self.video_name + '/'
 
-    def setGetFrameName(self, getFrameName = None):
-        if getFrameName is None:
-            def getFrameName(frame_id):
-                return self.video_data_folder+'frame/image_%05d.png' % (frame_id+1)
-        self.getFrameName = getFrameName
+    def getFrameName(self, frame_id):
+        frame_name = self.video_data_folder+'frame/image_%05d.png'
+        if frame_id >= 0:
+            frame_name = frame_name % (frame_id+1)
+        return frame_name 
 
     def getFrame(self, frame_id):
         return imageio.imread(self.getFrameName(frame_id))
@@ -81,19 +80,14 @@ class videoBasic(object):
                 else:
                     shutil.copy(frame_name_in, frame_name_out)
 
-    def getFrameIndex(self, option = 0, shot_js = None):
+    def getFrameIndex(self, option = 0, shot_folder = None):
         frames = np.arange(0, self.video_frame_num, self.video_frame_rate)
         if option == 0:
             # All frames
             frame_suf = '_all'
             return frames
         else:
-            if shot_js is None:
-                # default in the www/ folder
-                shot_js = self.video_web_folder + '../saved/%s_shot.js' % (self.video_url)
-            elif shot_js[-1] == '/':
-                # only provide the folder
-                shot_js = shot_js + '%s_shot.js' % (self.video_url)
+            shot_js = self.getShotJs(shot_folder)
             shot_info = vutil.readtxt(shot_js)[0]
             shot_start = [int(x) for x in shot_info[shot_info.find('=')+2:shot_info.find(';')-1].split(',')] 
             shot_start += [len(frames) - 1]
@@ -104,6 +98,8 @@ class videoBasic(object):
                 frame_id = []
                 for shot_id in np.where(shot_selection == 0)[0]:
                     frame_id += [shot_start[shot_id], shot_start[shot_id+1] - 1]
+                # Exist single-frame shots
+                frame_id = np.unique(frame_id)
             elif option == -2: 
                 # All frames in selected shots
                 frame_suf = '_shot'
@@ -112,18 +108,26 @@ class videoBasic(object):
             return frames[frame_id], frame_suf
 
     # shot-level filenames
-    def getShotTxt(self, shot_folder = None):
-        if shot_folder is None:
-            shot_folder = self.video_data_folder
-        return shot_folder + 'shot.txt'
-    def getShotJs(self, shot_folder = None):
-        if shot_folder is None:
-            shot_folder = self.video_web_folder + '../saved/'
-        return shot_folder + '%s_shot.js' % (self.video_url)
-    def getShotHtml(self, shot_folder = None):
-        if shot_folder is None:
-            shot_folder = self.video_web_folder + '../test/'
-        return shot_folder + '%s_shot.html' % (self.video_url)
+    def getShotTxt(self, shot_file = None):
+        if shot_file is None:
+            shot_file = self.video_data_folder
+        if shot_file[-1] == '/':
+            shot_file += 'shot.txt'
+        return shot_file
+
+    def getShotJs(self, shot_file = None):
+        if shot_file is None:
+            shot_file = self.video_web_folder + '../saved/'
+        if shot_file[-1] == '/':
+            shot_file += '%s_shot.js' % (self.video_url)
+        return shot_file
+
+    def getShotHtml(self, shot_file = None):
+        if shot_file is None:
+            shot_file = self.video_web_folder + '../test/'
+        if shot_file[-1] == '/':
+            shot_file += '%s_shot.html' % (self.video_url)
+        return shot_file
 
 
 

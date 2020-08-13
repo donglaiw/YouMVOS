@@ -10,6 +10,6 @@ vidtool.egg-info/PKG-INFO
 vidtool.egg-info/SOURCES.txt
 vidtool.egg-info/dependency_links.txt
 vidtool.egg-info/top_level.txt
-vidtool/template/__init__.py
-vidtool/template/proofread_seg.py
-vidtool/template/proofread_shot.py
+vidtool/views/__init__.py
+vidtool/views/proofread_seg.py
+vidtool/views/proofread_shot.py
