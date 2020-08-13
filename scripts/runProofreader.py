@@ -41,6 +41,7 @@ if __name__ == "__main__":
             vp.copyFrames(vp.video_share_folder + 'im/')
         elif opt == '1.1':
             # Generate vsvi files for VAST
+            vp.setRedo(True)
             vp.vastProofreadSeg(frame_index = -1)
 
         elif opt == '2':

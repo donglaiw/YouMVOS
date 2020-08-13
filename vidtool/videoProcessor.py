@@ -164,6 +164,8 @@ class videoProcessor(videoBasic):
         # https://github.com/donglaiw/detectron2
         if isinstance(frame_index, int):
             frame_index, frame_suf = self.getFrameIndex(frame_index, shot_file)
+            frame_index += 1 # ffmpeg
+            import pdb; pdb.set_trace()
 
         if input_folder is None:
             input_folder = self.getFrameName(-1)
