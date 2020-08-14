@@ -45,10 +45,11 @@ class videoBasic(object):
         self.video_url = video_name[max(0, video_name.rfind('/')):]
         self.video_frame_num = frame_num
         self.video_frame_rate = frame_rate
-        if frame_num < 0:
-            self.video_frame_num = self.video_all_info[video_name]['num_frame']
-        if frame_rate < 0:
-            self.video_frame_rate = self.video_all_info[video_name]['fps']
+        if isinstance(self.video_all_info, dict):
+            if frame_num < 0:
+                self.video_frame_num = self.video_all_info[video_name]['num_frame']
+            if frame_rate < 0:
+                self.video_frame_rate = self.video_all_info[video_name]['fps']
         self.video_frame_rate = int(np.round(self.video_frame_rate))
 
         self.video_data_folder = self.data_folder + '/' + self.video_name + '/'
