@@ -1,4 +1,4 @@
-from T_util import readtxt, U_mkdir
+from . import videoUtil as vutil
 
 class videoDownloader(object):
     def __init__(self, job_id = 0, job_num = 1, output_folder = None, redo = False):
@@ -71,6 +71,6 @@ class videoDownloader(object):
                 # 136: 1280x720
                 cmd = "youtube-dl --no-check-certificate -f 136 " + video_url + " -o " + file_mp4
                 print(cmd)
-                U_mkdir(file_mp4, 1)
+                vutil.mkdir(file_mp4, 1)
                 os.system(cmd)
 

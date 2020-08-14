@@ -12,18 +12,18 @@ if __name__ == "__main__":
         job_num = int(sys.argv[3])
 
     param = json.load(open('data/param.json'))
-    vp = videoProcessor(job_id, job_num)
+
+    vd = videoDownloader(job_id, job_num)
     data_folder = param['DATA_FOLDER']
     web_folder = param['WEB_FOLDER']
     share_folder = param['SHARE_FOLDER']
-    detectron2_folder = param['DETECTRON2_FOLDER']
 
-    vp.setFolders(data_folder, web_folder, share_folder)
-    vp.setInputVideoTxt('data/video_todo.txt')
+    vd.setFolders(data_folder, web_folder, share_folder)
+    vd.setInputVideoJson('data/video_todo.json')
 
-    for vid,video_name in enumerate(vp.video_all_name[job_id::job_num]):
+    for vid,video_name in enumerate(vd.video_all_name[job_id::job_num]):
         print('process video: ', video_name)
-        vp.setVideoInfo(video_name)
+        vd.setVideoInfo(video_name)
         # Set up the web proofreading for shot detection and classification
         if opt == '0':
             pass
@@ -33,6 +33,7 @@ if __name__ == "__main__":
             cmd_file = 'db/tmp.sh'
             if vid == 0:
                 vutil.writetxt(cmd_file, ['#/bin/bash'])
+<<<<<<< HEAD
             vp.computeDetectron2Seg(detectron2_folder, 1, \
                                     output_folder = vp.getKeyframeSegmentFolder(vp.video_data_folder, 1), \
                                     shot_file = vp.video_data_folder,

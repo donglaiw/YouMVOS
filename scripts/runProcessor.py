@@ -22,8 +22,6 @@ if __name__ == "__main__":
     vp.setInputVideoJson('data/video_todo.json')
 
     for vid,video_name in enumerate(vp.video_all_name[job_id::job_num]):
-        if vid == 0:
-            continue
         print('process video: ', video_name)
         vp.setVideoInfo(video_name)
         # Set up the web proofreading for shot detection and classification
