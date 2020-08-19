@@ -65,18 +65,17 @@ if __name__ == "__main__":
             # rename seg_out/images
             from glob import glob
             Do = vp.video_share_folder
-            if os.path.exists(Do + 'seg_out/'):
+            if os.path.exists(Do + 'seg_out/') and not os.path.exists(Do + 'seg.vsseg'):
                 Dw = vp.video_web_folder.replace('movie','movie/download')
                 fid = np.loadtxt(Dw + 'fid.txt').astype(int)
                 ims = sorted(glob(Do + 'seg_out/*.png')) 
                 assert len(ims) == len(fid)
-                Do2 = Do + 'seg_out2/'
+                Do2 = Do + 'seg_out_all/'
                 vutil.mkdir(Do2)
                 frames = range(0, vp.video_frame_num, vp.video_frame_rate)
                 for i in range(len(fid)):
                     print(np.where(frames == fid[i])[0][0])
                     shutil.copy(ims[i], Do2 + '%04d.png' % np.where(frames == fid[i])[0][0])
-                import pdb; pdb.set_trace()
 
 
         elif opt == '2':
