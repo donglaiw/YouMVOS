@@ -18,15 +18,28 @@ if __name__ == "__main__":
     share_folder = param['SHARE_FOLDER']
     detectron2_folder = param['DETECTRON2_FOLDER']
 
+    fn = 'data/video'
     vp.setFolders(data_folder, web_folder, share_folder)
-    vp.setInputVideoJson('data/video_todo.json')
+    vp.setInputVideoJson(fn + '.json')
 
     for vid,video_name in enumerate(vp.video_all_name[job_id::job_num]):
         print('process video: ', video_name)
         vp.setVideoInfo(video_name)
         # Set up the web proofreading for shot detection and classification
         if opt == '0':
-            pass
+            vp.setSingleProcess()
+            vp.processDownsample()
+            vp.visualizeClip()
+        elif opt == '0.1': # generate js param for visualization file
+            if vid == 0:
+                vutil.VideoTxtToJs(fn + '.txt', web_folder + 'js/%s.js' % fn[fn.rfind('/')+1:])
+                break
+        elif opt == '0.9':
+            output_folder = vp.getFrameName(0)
+            output_folder = output_folder[:output_folder.rfind('/')] + '_ds/'
+            input_folder = 'db/export/' + vp.video_name + 'frame_ds/'
+            if os.path.exists(input_folder):
+                shutil.move(input_folder, output_folder)
 
         # Segmentation: Detectron2
         elif opt == '1':

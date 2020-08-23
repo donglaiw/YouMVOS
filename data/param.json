@@ -1,6 +1,7 @@
 {
     "DATA_FOLDER" : "/n/pfister_lab2/Lab/vcg_natural/youtubeE-vis/",
-    "WEB_FOLDER" : "/var/www/html/donglai/movie/",
+    "WEB_FOLDER" : "/n/boslfs02/LABS/lichtman_lab/glichtman/public/vcg/youtop-vis/",
     "SHARE_FOLDER" : "/home/donglai/google-drive/YouTubeTop-vis/",
-    "DETECTRON2_FOLDER" : "/n/pfister_lab2/Lab/donglai/lib/pipeline/detectron2/" 
+    "DETECTRON2_FOLDER" : "/n/pfister_lab2/Lab/donglai/lib/pipeline/detectron2/", 
+    "FFMPEG" : "/n/home04/donglai/local/bin/ffmpeg "
 }

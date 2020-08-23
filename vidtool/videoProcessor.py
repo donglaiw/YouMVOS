@@ -19,35 +19,40 @@ class videoProcessor(videoBasic):
             raise ValueError('File does not exist: ', stat_path)
         return np.loadtxt(stat_path).astype(int)
 
-    def processDownsample(self, frame_downsample = 4, frame_rate = -1):
-        output_folder = self.export_folder+'frame_ds/'
+    def processDownsample(self, output_folder = None, frame_downsample = 4, frame_rate = -1):
+        if output_folder is None:
+            output_folder = self.getFrameName(-2, suffix = '_ds')
         if frame_rate < 0 :
-            frame_rate = self.fps
+            frame_rate = self.video_frame_rate
         if self.job_id == 0: # avoid multiple thread conflicts
-            U_mkdir(output_folder)
+            vutil.mkdir(output_folder)
 
         frame_size = np.array(self.getFrame(0).shape)
         frame_size[:2] = (frame_size[:2] + frame_downsample - 1) // frame_downsample
-        frame_ids = np.arange(0, self.frame_num, frame_rate)
+        frame_ids = self.getKeyframeIndex()
         for frame_id in frame_ids[self.job_id :: self.job_num]:
-            output_file = output_folder + self.getFrameNameLocal(frame_id)
+            output_file = self.getFrameName(frame_id, output_folder)
             if not os.path.exists(output_file):
                 output = self.getFrame(frame_id)[::frame_downsample, ::frame_downsample]
                 imageio.imwrite(output_file, output)
 
-    def visualizeClip(self, frame_duration = 0.2):
-        output_folder = self.export_folder
-        output_file = output_folder + '%s_in.gif' % (self.video_name)
+    def visualizeClip(self, frame_folder = None, output_file = None, frame_duration = 0.2):
+        if frame_folder is None:
+            frame_folder = self.getFrameName(-2, suffix = '_ds')
+        if output_file is None:
+            output_file = (self.video_web_folder % 'gif')[: -1] + '_video.gif'
+
         if not os.path.exists(output_file):
-            frame_names = sorted(glob(output_folder + 'frame_ds/*.png')) 
+            vutil.mkdir(output_file, 1)
+            frame_names = sorted(glob(frame_folder + '*.png')) 
             if len(frame_names) == 0:
-                raise ValueError('No frames in %s' % (output_folder + 'frame_ds/'))
+                raise ValueError('No frames in %s' % (frame_folder))
             frame_size = list(imageio.imread(frame_names[0]).shape)
             output = np.zeros([len(frame_names)] + frame_size, np.uint8)
             for frame_id, frame_name in enumerate(frame_names):
                 output[frame_id] = imageio.imread(frame_name)
 
-            writegif(output_file, output, duration = frame_duration)
+            vutil.writegif(output_file, output, duration = frame_duration)
 
     def computeMaxDiff(self, frame_downsample=4):
         num_per_job = (self.frame_num + self.job_num - 1) // self.job_num

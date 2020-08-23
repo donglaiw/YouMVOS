@@ -42,10 +42,10 @@ class videoBasic(object):
     # one video
     def setVideoInfo(self, video_name, frame_num = -1, frame_rate = -1):
         self.video_name = video_name
-        self.video_url = video_name[max(0, video_name.rfind('/')):]
+        self.video_url = video_name[video_name.rfind('/')+1:]
         self.video_frame_num = frame_num
         self.video_frame_rate = frame_rate
-        if isinstance(self.video_all_info, dict):
+        if self.video_all_info is not None:
             if frame_num < 0:
                 self.video_frame_num = self.video_all_info[video_name]['num_frame']
             if frame_rate < 0:
@@ -53,17 +53,21 @@ class videoBasic(object):
         self.video_frame_rate = int(np.round(self.video_frame_rate))
 
         self.video_data_folder = self.data_folder + '/' + self.video_name + '/'
-        self.video_web_folder = self.web_folder + '/' + self.video_name + '/'
+        self.video_web_folder = self.web_folder + '/%s/' + self.video_name + '/'
         self.video_share_folder = self.share_folder + '/' + self.video_name + '/'
 
-    def getFrameName(self, frame_id):
-        frame_name = self.video_data_folder+'frame/image_%05d.png'
+    def getFrameName(self, frame_id = 0, output_folder = None, suffix = ''):
+        if output_folder is None:
+            output_folder = self.video_data_folder + 'frame%s/' % suffix
+        if frame_id == -2:
+            return output_folder
+        frame_name = output_folder + 'image_%05d.png'
         if frame_id >= 0:
             frame_name = frame_name % (frame_id+1)
         return frame_name 
 
-    def getFrame(self, frame_id):
-        return imageio.imread(self.getFrameName(frame_id))
+    def getFrame(self, frame_id = 0, output_folder = None):
+        return imageio.imread(self.getFrameName(frame_id, output_folder))
 
     def copyFrames(self, output_folder, frame_rate = -1, frame_downsample = 1):
         vutil.mkdir(output_folder)

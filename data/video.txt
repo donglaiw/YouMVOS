@@ -16,7 +16,6 @@ music_video/pRpeEdMmmQ0,Shakira, Waka waka
 music_video/7PCkvCPvDXk,Meghan Trainor, All about that bass
 music_video/kOkQ4T5WO9E,Calvin Harris and Rihanna, This Is What You Came For
 music_video/5GL9JoH4Sws,Fifth Harmony, Work from Home
-music_video/2vjPBrBU-TM, Sia, Chandelier
 music_video/k2qgadSvNyU, Dua Lipa, New rules
 kid/F4tHL8reNCs,LooLoo Kids,Johny Johny Yes Papa
 kid/qZsoesa55w,PINKFONG Songs for Children,Baby Shark Dance
@@ -27,6 +26,12 @@ animation/J9IdcVG0Z-s,Jonni Valentayn,Tom and Jerry-47 Episode-Little Quacker (1
 animation/L0MK7qz13bU,Disney UK,Frozen-Let it Go
 animation/KYniUCGPGLs,Get Movies,Masha and The Bear-Recipe for disaster (Episode 17)
 cooking/3nUKwvFsjA4,cooking show with James Corden,English Breakfast with Gordon and Matilda Ramsay
+cooking/DnQ09ZZCjCs, Paik's Cuisine, Easy Kimchi Jjigae (Kimchi Stew) Paik Jong Won's Paik Jong Won Recipe
+cooking/vQZPHRbnep8, ARS Primitive Cooking, Cooking Duck red Eggs and Heart for Food - Cooking Chicken red Eggs eating Delicious
+cooking/y9k7vV0NSig, James Charles, Quarantine Cooking with James Charles
+cooking/e1DFlIGxPhE, CinematicTV, Jaydayoungan Whips Up The RuffWayy Edition
+cooking/3wAQxJeyyXo, Tasty, A Day In The Life Of A Sushi Master Tasty
+cooking/RyxUH2Aw1co, Laura in the Kitchen, How to Make Fudgy Brownies
 comedy/qVMW_1aZXRk, SNL,Donald Trump vs. Hillary Clinton Town Hall Debate Cold Open
 comedy/izh-j8KUYjs, Key &Peele, Awesome Hitler Story
 product/dfToHzOmwdI,Lit Mobile, Solar Power Bank Product Review

@@ -5,6 +5,7 @@ opt = sys.argv[1]
 D0='/n/pfister_lab2/Lab/donglai/movie-vis/'
 Do = 'db/slurm/'
 sa='source /n/pfister_lab2/Lab/donglai/lib/miniconda2/bin/activate '
+sa3='source /n/home04/donglai/miniconda3/bin/activate '
 # pp: cox/shared/general
 def get_pref(mem=10000,do_gpu=False,pp='cox',tt='4-00:00'):
     pref = '#!/bin/bash\n'
@@ -38,11 +39,10 @@ if opt =='0':
 elif opt =='1': 
     fn='yt'
     suf = ' \n'
-    num = 15;cn = 'T_youtube.py 1.11'
-    num = 5;cn = 'T_youtube.py 0.2'
-    num = 5;cn = 'T_youtube.py 1'
+    num = 5;cn = 'scripts/runDownloader.py 0.2'
+    num = 9;cn = 'scripts/runProcessor.py 0'
     
-    cmd+=[sa+' idm \n']
+    cmd+=[sa3 + ' vis \n']
     cmd+=['ls;python '+D0+cn+' %d '+str(num)+suf]
 
 
@@ -60,5 +60,5 @@ for i in range(num):
         else:
             a.write(cc)
     a.close()
-# bad in python3
-print('for i in {0..%d};do sbatch '+Do+'%s_${i}.sh && sleep 1;done')%(num-1, fn)
+
+print(('for i in {0..%d};do sbatch '+Do+'%s_${i}.sh && sleep 1;done')%(num-1, fn))

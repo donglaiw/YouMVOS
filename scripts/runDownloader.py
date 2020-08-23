@@ -17,33 +17,36 @@ if __name__ == "__main__":
     data_folder = param['DATA_FOLDER']
     web_folder = param['WEB_FOLDER']
     share_folder = param['SHARE_FOLDER']
+    ffmpeg = param['FFMPEG']
 
     vd.setFolders(data_folder, web_folder, share_folder)
-    vd.setInputVideoJson('data/video_todo.json')
+    fn = 'data/video_cooking'
+    fn = 'data/video'
+    #vd.setInputVideoJson(fn + '.json')
+    vd.setInputVideoTxt(fn + '.txt')
 
     for vid,video_name in enumerate(vd.video_all_name[job_id::job_num]):
         print('process video: ', video_name)
         vd.setVideoInfo(video_name)
-        # Set up the web proofreading for shot detection and classification
-        if opt == '0':
-            pass
 
-        # Segmentation: Detectron2
-        elif opt == '1':
-            cmd_file = 'db/tmp.sh'
-            if vid == 0:
-                vutil.writetxt(cmd_file, ['#/bin/bash'])
-<<<<<<< HEAD
-            vp.computeDetectron2Seg(detectron2_folder, 1, \
-                                    output_folder = vp.getKeyframeSegmentFolder(vp.video_data_folder, 1), \
-                                    shot_file = vp.video_data_folder,
-                                    cmd_file = cmd_file)
-        elif opt == '1.1': # copy seg result: data_folder -> share_folder
-            seg_in = vp.getKeyframeSegmentFolder(vp.video_data_folder, 1)
-            seg_out = vp.getKeyframeSegmentFolder(vp.video_share_folder, 1)
-            shutil.copytree(seg_in, seg_out)
-        elif opt == '2':
-            f0 = vp.video_name[:vp.video_name.find('/')]
-            f1 = vp.video_name[vp.video_name.find('/')+1:]
-            print('mkdir -p',vp.video_share_folder+'im/')
-            #print('mv',vp.video_share_folder+'../new/'+f1+'/*.png',vp.video_share_folder+'im/')
+        if opt == '0':
+            # Download the mp4
+            vd.getVideoMP4()
+        elif opt == '0.1':
+            # Check video size
+            vutil.checkVideoSize(vd.getVideoPath())
+        elif opt == '0.2':
+            # Extract frames
+            vd.getVideoFrames(ffmpeg)
+        elif opt == '0.3':
+            # Gather video information: txt -> json
+            if vid ==0:
+                vutil.VideoTxtToJson(fn + '.txt', fn + '.json', data_folder, data_folder)
+            break;
+        elif opt == '0.9':
+            # move files
+            output_file = vd.getVideoPath()
+            output_file_old = output_file[:output_file.rfind('/')] + '.mp4'
+            if os.path.exists(output_file_old):
+                print(output_file_old)
+                shutil.move(output_file_old, output_file)
