@@ -99,12 +99,15 @@ class videoBasic(object):
         output_folder += 'seg%s/' % frame_suf
         return output_folder
 
-    def getKeyframeIndex(self, option = 0, shot_folder = None, frame_rate = -1):
+    def getKeyframeIndex(self, option = 0, shot_folder = None, frame_rate = -1, frame_num = -1):
         # returninput can either be the input frame index
         # or the frame_index for the pre-defined frame index
-        if frame_rate < 0:
-            frame_rate = self.video_frame_rate
-        keyframes = np.arange(0, self.video_frame_num, frame_rate)
+        if frame_num > -1 :
+            keyframes = np.linspace(0, self.video_frame_num - 1, frame_num).astype(int)
+        else:
+            if frame_rate < 0:
+                frame_rate = self.video_frame_rate
+            keyframes = np.arange(0, self.video_frame_num, frame_rate)
         if option == 0:
             # All frames
             return keyframes

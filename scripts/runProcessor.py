@@ -28,8 +28,8 @@ if __name__ == "__main__":
         # Set up the web proofreading for shot detection and classification
         if opt == '0':
             vp.setSingleProcess()
-            vp.processDownsample()
-            vp.visualizeClip()
+            #vp.processDownsample()
+            vp.visualizeClip(frame_num = 20)
         elif opt == '0.1': # generate js param for visualization file
             if vid == 0:
                 vutil.VideoTxtToJs(fn + '.txt', web_folder + 'js/%s.js' % fn[fn.rfind('/')+1:])

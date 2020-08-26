@@ -36,7 +36,7 @@ class videoProcessor(videoBasic):
                 output = self.getFrame(frame_id)[::frame_downsample, ::frame_downsample]
                 imageio.imwrite(output_file, output)
 
-    def visualizeClip(self, frame_folder = None, output_file = None, frame_duration = 0.2):
+    def visualizeClip(self, frame_folder = None, output_file = None, frame_stride = 1, frame_num = -1, frame_duration = 0.2):
         if frame_folder is None:
             frame_folder = self.getFrameName(-2, suffix = '_ds')
         if output_file is None:
@@ -45,6 +45,11 @@ class videoProcessor(videoBasic):
         if not os.path.exists(output_file):
             vutil.mkdir(output_file, 1)
             frame_names = sorted(glob(frame_folder + '*.png')) 
+            if frame_num == -1:
+                frame_names = frame_names[::frame_stride]
+            else:
+                frame_names = [frame_names[int(x)] for x in np.linspace(0, len(frame_names)-1, frame_num)]
+
             if len(frame_names) == 0:
                 raise ValueError('No frames in %s' % (frame_folder))
             frame_size = list(imageio.imread(frame_names[0]).shape)

@@ -10,13 +10,14 @@ music_video/60ItHLz5WEA, Alan walker, Faded
 music_video/RBumgq5yVrA, Passenger, Let her go
 music_video/CevxZvSJLk8, Katy Perry, Roar
 music_video/nfWlot6h_JM,Taylor Swift,Shake It Off
-music_video/YqeW9_5kURI,Major Lazer, Lean on
 music_video/YQHsXMglC9A,Adele, Hello
 music_video/pRpeEdMmmQ0,Shakira, Waka waka
 music_video/7PCkvCPvDXk,Meghan Trainor, All about that bass
 music_video/kOkQ4T5WO9E,Calvin Harris and Rihanna, This Is What You Came For
 music_video/5GL9JoH4Sws,Fifth Harmony, Work from Home
 music_video/k2qgadSvNyU, Dua Lipa, New rules
+music_video/bnVUHWCynig, Beyonce, Halo
+music_video/cmSbXsFE3l8, Anna Kendrick, Cups (Pitch Perfect’s “When I’m Gone”)
 kid/F4tHL8reNCs,LooLoo Kids,Johny Johny Yes Papa
 kid/qZsoesa55w,PINKFONG Songs for Children,Baby Shark Dance
 kid/WRVsOCh907o,CoComelon Nursery Rhymes & Kids Songs,Bath Song
@@ -39,3 +40,23 @@ vlog/0oPa3GJJDDA,funforlouis, EPIC WORLD ADVENTURE
 howto/j2C8MkY7Co8,Robert C. Hamilton,How To Calm A Crying Baby
 history/Yocja_N5s1I,CrashCourse,The Agricultural Revolution
 sports/wgVOgGLtPtc,NBA,Final 3:39 of Game 7 of the 2016 NBA Finals
+movie_trailer/zAGVQLHvwOY, Warner Bros. Pictures, Joker
+movie_trailer/wb49-oV0F78, Paramount Pictures, Mission: Impossible - Fallout
+movie_trailer/T5OhkFY1PQE, Netflix, The Two Popes
+movie_trailer/QkZxoko_HC0, Universal Pictures, Green Book
+movie_trailer/1Fg5iWmQjwk, SearchlightPictures, The Grand Budapest Hotel
+movie_trailer/AST2-4db4ic, Sony Pictures Entertainment, Little Women
+movie_trailer/foyufD52aog, Walt Disney Studios, Aladdin
+movie_trailer/Skpu5HaVkOc, The Fast Saga, Furious 7
+movie_trailer/xjDjIWPwcPU, Marvel Entertainment, Black Panther
+movie_trailer/0pdqf4P9MB8, Lionsgate Movies, La La Land
+pet/8vAsg37pyC8, MochaMilk, i never asked my dog to babysit but she does it anyways
+pet/AaDBwFnDUZY, Sawol, Best Couple Workout
+pet/wcF3FKKFtfA, My BB Bunny, Newborn Baby Bunnies Snuggle and Sleep
+pet/joEvL8gMVRM, 강형욱의 보듬TV - Dog Trainer Kang, Police Dog 'Leo' and 'Kang Hyung Wook' (Hunter Kang)
+pet/tkzwXX53qQ8, 슈앤트리 SHU AND TREE, Dog Pet Puppy Pomeranian Grooming Teddy bear style
+pet/4Ss4ek9sTVw,  The Dodo ,Dog And Mailman Have The Sweetest Relationship | The Dodo
+pet/2BHtUJBMv90, Pam's Dog Academy, "How to" Stop your Dog from Jumping on the COUCH without Punishment
+pet/WUZUSD4477I, walter santi, Cat's Reaction to Treadmill !!
+pet/ZkGTX3PUSHc, Tucker Budzyn, My Dog Does Weird Things | PART 2
+pet/0Haxy5PvCuk, EVERYWHEREsometimes, Emperor Likes Me

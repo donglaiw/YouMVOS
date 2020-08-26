@@ -34,7 +34,7 @@ def VideoTxtToJs(input_txt, output_js):
     video_names = ['"' + x.split(',')[0] + '"' for x in input_videos]
     output = 'var video_name = [' + ','.join(video_names) + '];'
 
-    json.dump(output, open(output_js,'w'))
+    writetxt(output_js, output)
 
 
 def downloadVideo(video_url, output_mp4 = None):
