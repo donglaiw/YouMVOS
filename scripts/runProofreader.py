@@ -16,6 +16,7 @@ if __name__ == "__main__":
     vp = videoProofreader(job_id, job_num)
     data_folder = param['DATA_FOLDER']
     web_folder = param['WEB_FOLDER']
+    web_folder = '/var/www/html/donglai/movie/'
     share_folder = param['SHARE_FOLDER']
 
     vp.setFolders(data_folder, web_folder, share_folder)
@@ -66,16 +67,20 @@ if __name__ == "__main__":
             from glob import glob
             Do = vp.video_share_folder
             if os.path.exists(Do + 'seg_out/') and not os.path.exists(Do + 'seg.vsseg'):
-                Dw = vp.video_web_folder.replace('movie','movie/download')
+                print(Do)
+                Dw = vp.video_web_folder.replace('movie///%s','movie/download')
                 fid = np.loadtxt(Dw + 'fid.txt').astype(int)
                 ims = sorted(glob(Do + 'seg_out/*.png')) 
                 assert len(ims) == len(fid)
                 Do2 = Do + 'seg_out_all/'
+                import pdb; pdb.set_trace()
                 vutil.mkdir(Do2)
                 frames = range(0, vp.video_frame_num, vp.video_frame_rate)
                 for i in range(len(fid)):
                     print(np.where(frames == fid[i])[0][0])
                     shutil.copy(ims[i], Do2 + '%04d.png' % np.where(frames == fid[i])[0][0])
+        elif opt == '1.5':
+            # Refine the seg with grabcut
 
 
         elif opt == '2':

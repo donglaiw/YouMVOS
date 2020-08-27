@@ -40,7 +40,7 @@ elif opt =='1':
     fn='yt'
     suf = ' \n'
     num = 5;cn = 'scripts/runDownloader.py 0.2'
-    num = 9;cn = 'scripts/runProcessor.py 0'
+    #num = 9;cn = 'scripts/runProcessor.py 0'
     
     cmd+=[sa3 + ' vis \n']
     cmd+=['ls;python '+D0+cn+' %d '+str(num)+suf]
