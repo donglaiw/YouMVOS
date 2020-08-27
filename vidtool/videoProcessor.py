@@ -13,8 +13,10 @@ class videoProcessor(videoBasic):
     def __init__(self, job_id = 0, job_num = 1, redo = False):
         super().__init__(job_id, job_num, redo)
 
-    def getStat(self, stat):
-        stat_path = self.output_folder+'%s.txt'%stat
+    def getStat(self, stat, stat_folder = None):
+        if stat_folder is None:
+            stat_folder = self.video_data_folder
+        stat_path = stat_folder + ('%s.txt'%stat)
         if not os.path.exists(stat_path):
             raise ValueError('File does not exist: ', stat_path)
         return np.loadtxt(stat_path).astype(int)
@@ -60,27 +62,28 @@ class videoProcessor(videoBasic):
             vutil.writegif(output_file, output, duration = frame_duration)
 
     def computeMaxDiff(self, frame_downsample=4):
-        num_per_job = (self.frame_num + self.job_num - 1) // self.job_num
         
         if self.job_num != 1: # for long movies
-            output_path_max = self.output_folder+'rgb_max/'
-            output_path_diff = self.output_folder+'rgb_diff/'
+            output_path_max = self.video_data_folder + 'rgb_max/'
+            output_path_diff = self.video_data_folder + 'rgb_diff/'
             if self.job_id == 0: # avoid multiple thread conflicts
                 U_mkdir(output_path_max)
                 U_mkdir(output_path_diff)
             output_file_max = output_path_max + '%d_%d.txt'%(self.job_id, self.job_num)
             output_file_diff = output_path_diff + '%d_%d.txt'%(self.job_id, self.job_num)
         else: # for short videos
-            output_file_max = self.output_folder+'rgb_max.txt'
-            output_file_diff = self.output_folder+'rgb_diff.txt'
+            output_file_max = self.video_data_folder+'rgb_max.txt'
+            output_file_diff = self.video_data_folder+'rgb_diff.txt'
 
         do_max = not os.path.exists(output_file_max)
         do_diff = not os.path.exists(output_file_diff)
         if do_max or do_diff:
+            print('compute max/diff')
             # not using the last frame
-            frame_range = range(self.job_id * num_per_job, min((self.job_id + 1) * num_per_job, self.frame_num-1))
+            frame_range = self.getKeyframeIndex(-1, frame_rate = 1)[:-1] 
             output_diff = np.zeros(len(frame_range), int)
-            if frame_range[-1]==self.frame_num-2:
+            # if last job
+            if frame_range[-1] == self.video_frame_num-2:
                 output_max = np.zeros(len(frame_range)+1, int)
             else:
                 output_max = np.zeros(len(frame_range), int)
@@ -92,7 +95,7 @@ class videoProcessor(videoBasic):
                 output_diff[i] = np.abs(frame_current - frame_next).mean()
                 frame_current[:] = frame_next
 
-            if frame_range[-1]==self.frame_num-2:
+            if frame_range[-1] == self.video_frame_num-2:
                 output_max[-1] = frame_next.max()
 
             np.savetxt(output_file_max, output_max, '%d')
@@ -132,7 +135,7 @@ class videoProcessor(videoBasic):
         if threshold_shot_len == 0:
             raise ValueError('threshold_shot_len must be bigger than 0')
 
-        output_path = self.output_folder+'shot.txt'
+        output_path = self.video_data_folder+'shot.txt'
         if not os.path.exists(output_path):
             rgb_max = self.getStat('rgb_max')
             rgb_diff = self.getStat('rgb_diff')

@@ -50,6 +50,7 @@ class videoBasic(object):
                 self.video_frame_num = self.video_all_info[video_name]['num_frame']
             if frame_rate < 0:
                 self.video_frame_rate = self.video_all_info[video_name]['fps']
+            self.video_frame_size = self.video_all_info[video_name]['size']
         self.video_frame_rate = int(np.round(self.video_frame_rate))
 
         self.video_data_folder = self.data_folder + '/' + self.video_name + '/'
@@ -103,28 +104,36 @@ class videoBasic(object):
         # returninput can either be the input frame index
         # or the frame_index for the pre-defined frame index
         if frame_num > -1 :
+            # N-frame
             keyframes = np.linspace(0, self.video_frame_num - 1, frame_num).astype(int)
+            return keyframes
         else:
             if frame_rate < 0:
                 frame_rate = self.video_frame_rate
             keyframes = np.arange(0, self.video_frame_num, frame_rate)
-        if option == 0:
-            # All frames
-            return keyframes
-        else:
-            # Js: natural index without the framerate info
-            shot_js = self.getShotJs(shot_folder)
-            shots, shot_selection = self.convertShotJsToArr(shot_js, option=1)
-            if option == 1: 
-                # Boundary frames in selected shots
-                # Exist single-frame shots
-                frame_id = np.unique(shots[shot_selection == 0])
-            elif option == 2: 
-                # All frames in selected shots
-                frame_id = []
-                for shot_id in np.where(shot_selection == 0)[0]:
-                    frame_id += range(shots[shot_id, 0], shots[shot_id, 1]+1)
-            return keyframes[frame_id]
+
+            if option == 0:
+                # All frames
+                return keyframes
+            elif option == -1:
+                # divided by job
+                num_per_job = (len(keyframes) + self.job_num - 1) // self.job_num
+                frame_range = range(self.job_id * num_per_job, min((self.job_id + 1) * num_per_job, len(keyframes)))
+                return keyframes[frame_range]
+            else:
+                # Js: natural index without the framerate info
+                shot_js = self.getShotJs(shot_folder)
+                shots, shot_selection = self.convertShotJsToArr(shot_js, option=1)
+                if option == 1: 
+                    # Boundary frames in selected shots
+                    # Exist single-frame shots
+                    frame_id = np.unique(shots[shot_selection == 0])
+                elif option == 2: 
+                    # All frames in selected shots
+                    frame_id = []
+                    for shot_id in np.where(shot_selection == 0)[0]:
+                        frame_id += range(shots[shot_id, 0], shots[shot_id, 1]+1)
+                return keyframes[frame_id]
 
     # Shot-related files.
     def getShotTxt(self, shot_file = None):
@@ -137,7 +146,8 @@ class videoBasic(object):
 
     def getShotJs(self, shot_file = None):
         if shot_file is None:
-            shot_file = self.video_web_folder + '../saved/'
+            shot_file = (self.video_web_folder % 'proofread/')[:-1]
+            shot_file = shot_file[:shot_file.rfind('/')] + '/saved/'
         # input folder -> filename 
         if shot_file[-1] == '/':
             shot_file += '%s_shot.js' % (self.video_url)
@@ -145,7 +155,8 @@ class videoBasic(object):
 
     def getShotHtml(self, shot_file = None):
         if shot_file is None:
-            shot_file = self.video_web_folder + '../test/'
+            shot_file = (self.video_web_folder % 'proofread/')[:-1]
+            shot_file = shot_file[:shot_file.rfind('/')] + '/test/'
         # input folder -> filename 
         if shot_file[-1] == '/':
             shot_file += '%s_shot.html' % (self.video_url)
@@ -176,7 +187,10 @@ class videoBasic(object):
 
         # Take the ceil for the start frame.
         # Can be repeated due to frame_rate downsample
-        shots = np.unique((shots[:, 0] + frame_rate - 1) // frame_rate)
+        if shots.ndim == 1:
+            shots = [(shots[0] + frame_rate - 1) // frame_rate]
+        else:
+            shots = np.unique((shots[:, 0] + frame_rate - 1) // frame_rate)
         output_js = 'var shot_start_str="'+','.join([str(x) for x in shots])+'";'
         output_js += 'var shot_selection_str="'+','.join([str(0) for x in shots])+'";'
         return output_js

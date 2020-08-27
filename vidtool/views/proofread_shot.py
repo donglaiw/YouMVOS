@@ -13,6 +13,7 @@ Shot starting IDs: <textarea id="shot" cols=50 rows=10></textarea> (separated by
 <script>
 var shot_start = [0];
 var shot_selection = [0];
+var frame_folder = "%s";
 var video_name = "%s";
 var genre_name = "./";
 var video_url = video_name;
@@ -29,7 +30,7 @@ load_js()
 
 function getImName(i){
     var im_id = 1 + (i * fps)
-    var fn = "../" + video_url + "/image_";
+    var fn = frame_folder + video_name + "/image_";
     if(im_id<10){
         fn += '0000'+im_id;
     }else if(im_id<100){
@@ -155,8 +156,8 @@ $("#sub").click(function(){
     document.getElementById("ans").value = 'var shot_start_str="'+ans_out+'";var shot_selection_str="'+shot_selection+'"';
     document.getElementById("folder").value = get_js_name(false);
     tmp = $.post("../../save_ans.php", $("#mturk_form").serialize(), function(data) {
-        window.location=window.location.href.substring(0, window.location.href.lastIndexOf("/");
-        });
+        window.location=window.location.href.substring(0, window.location.href.lastIndexOf("/"));
+    });
   });
 </script>
 """
