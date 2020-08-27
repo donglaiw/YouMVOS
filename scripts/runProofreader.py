@@ -88,7 +88,8 @@ if __name__ == "__main__":
                     shutil.copy(ims[i], Do2 + '%04d.png' % np.where(frames == fid[i])[0][0])
         elif opt == '1.5':
             # Refine the seg with grabcut
-            pass
+            if 'F4tHL8reNCs' in video_name:
+                vp.RefineSeg(iter_image = 30, iter_algo = 20)
 
 
         elif opt == '2':

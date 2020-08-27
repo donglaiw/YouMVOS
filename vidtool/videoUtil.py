@@ -4,6 +4,7 @@ import subprocess
 import json
 from scipy.ndimage import zoom
 import imageio
+import numpy as np
 
 def getVideoInfo(video_url):
     output_file = 'db/tmp.info'
@@ -106,3 +107,34 @@ def writegif(outname, vol, ratio=1, duration=0.5):
                 vol[cc] = zoom(vol[cc], ratio, order=1)
         out = vol
     imageio.mimsave(outname, out, 'GIF', duration=duration)
+
+def segRefineGrabcut(im, seg, iter_image = 30, iter_algo = 50): 
+    from scipy.ndimage.morphology import binary_erosion, binary_dilation
+    from scipy.ndimage.morphology import distance_transform_edt
+    import cv2
+    
+    seg_new = None
+    if seg.max() > 0:
+        sz = im.shape
+        uid = np.unique(seg)
+        uid = uid[uid>0]
+
+        bgdModel = np.zeros((1,65),np.float64)
+        fgdModel = np.zeros((1,65),np.float64)
+        
+        mask = np.zeros(sz[:2], np.uint8)
+        seg_new = np.zeros(sz[:2], seg.dtype)
+        for i in uid:
+            mask[:] = 0
+            mask_in = binary_erosion(seg == i, iterations = iter_image)
+            mask[mask_in > 0] = 1
+            mask_in = binary_dilation(seg == i, iterations = iter_image)
+            mask[(mask_in > 0) * (mask == 0)] = 3
+
+            dist = distance_transform_edt(seg != i)
+            mask[(dist < iter_image * 2) * (mask == 0)] = 2
+
+            out, bgdModel, fgdModel = cv2.grabCut(im, mask, None, bgdModel, fgdModel, iter_algo, cv2.GC_INIT_WITH_MASK)
+            out2 = np.where((out == cv2.GC_BGD) | (out == cv2.GC_PR_BGD), 0, 1)
+            seg_new[out2 > 0] = i
+    return seg_new

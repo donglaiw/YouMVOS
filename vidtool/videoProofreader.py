@@ -2,6 +2,7 @@ import os,sys
 import math
 import numpy as np
 from glob import glob
+import imageio
 
 from .views import html_proofread_shot
 from .views import vsvi_proofread_seg
@@ -68,3 +69,26 @@ class videoProofreader(videoBasic):
                                                    frame_index_str, frame_size[1], frame_size[0], \
                                                    len(frame_index), meta)
                 vutil.writetxt(output_vsvi, output)
+
+    def RefineSeg(self, seg_folder = 'seg_out_all/', seg_folder_path = None,
+                 iter_image = 30, iter_algo = 50):
+        if seg_folder_path is None:
+            seg_folder_path = self.video_share_folder
+
+        refine_folder =  seg_folder_path + seg_folder[:-1] + '_refine/' 
+        vutil.mkdir(refine_folder)
+        im_folder =  seg_folder_path + 'im/' 
+        seg_folder = seg_folder_path + seg_folder 
+
+        files_name_seg = sorted(glob(seg_folder + '*.png'))
+        files_name_im = sorted(glob(im_folder + '*.png'))
+        for file_name in files_name_seg:
+            output_name = refine_folder + file_name[file_name.rfind('/'):]
+            if not os.path.exists(output_name):
+                seg = imageio.imread(file_name)
+                fid = int(file_name[file_name.rfind('s')+1:-4])
+                im = imageio.imread(files_name_im[fid])
+                seg_out = vutil.segRefineGrabcut(im, seg, iter_image, iter_algo)
+                if seg_out is not None:
+                    imageio.imwrite(output_name, seg_out)
+            
