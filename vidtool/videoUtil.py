@@ -2,6 +2,7 @@ import os
 import glob
 import subprocess
 import json
+from scipy.ndimage import zoom
 import imageio
 
 def getVideoInfo(video_url):
@@ -42,6 +43,8 @@ def downloadVideo(video_url, output_mp4 = None):
         output_mp4 = '%s.mp4' % (video_url) 
     if not os.path.exists(output_mp4):
         # 136: 1280x720
+        if video_url[0] == '-':
+            video_url = '-- ' + video_url
         cmd = "youtube-dl --no-check-certificate -f 136 " + video_url + " -o " + output_mp4
         print(cmd)
         mkdir(output_mp4, 1)

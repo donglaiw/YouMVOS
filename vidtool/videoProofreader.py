@@ -13,6 +13,14 @@ class videoProofreader(videoBasic):
     def __init__(self, job_id = 0, job_num = 1, redo = False):
         super().__init__(job_id, job_num, redo)
     
+    def webProofreadFolder(self):
+        folder_name = (self.video_web_folder % 'proofread/')[:-1]
+        folder_name = folder_name[:folder_name.rfind('/') + 1]
+        if not os.path.exists(folder_name + 'saved/'):
+            os.mkdir(folder_name + 'saved/')
+            os.chmod(folder_name + 'saved/', 0o777)
+        vutil.mkdir(folder_name + 'test/')
+        vutil.mkdir(folder_name + 'result/')
 
     def webProofreadShot(self, input_shot_txt = None, output_shot_folder = None, frame_rate = -1):
         # Convert shot_txt into js and html
@@ -21,6 +29,7 @@ class videoProofreader(videoBasic):
 
         output_shot_js = self.getShotJs(output_shot_folder)
         if self.redo or not os.path.exists(output_shot_js):
+            print('do js')
             input_shot_file = self.getShotTxt(input_shot_txt)
             shots = np.loadtxt(input_shot_file).astype(int)
             output_var = self.convertShotArrToJs(shots, frame_rate)
@@ -28,7 +37,8 @@ class videoProofreader(videoBasic):
 
         output_shot_html = self.getShotHtml(output_shot_folder)
         if self.redo or not os.path.exists(output_shot_html):
-            output = html_proofread_shot % (self.video_name, (self.frame_num + self.frame_rate) // self.frame_rate, self.frame_rate)
+            print('do html')
+            output = html_proofread_shot % ('../../../frame_ds/', self.video_name, (self.video_frame_num + self.video_frame_rate - 1) // self.video_frame_rate, self.video_frame_rate)
             vutil.writetxt(output_shot_html, output)
 
     def vastProofreadSeg(self, frame_index = 0, shot_js = None, output_folder = None):

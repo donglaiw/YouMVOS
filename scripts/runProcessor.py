@@ -28,12 +28,22 @@ if __name__ == "__main__":
         # Set up the web proofreading for shot detection and classification
         if opt == '0':
             vp.setSingleProcess()
-            #vp.processDownsample()
+            vp.processDownsample()
             vp.visualizeClip(frame_num = 20)
         elif opt == '0.1': # generate js param for visualization file
             if vid == 0:
                 vutil.VideoTxtToJs(fn + '.txt', web_folder + 'js/%s.js' % fn[fn.rfind('/')+1:])
                 break
+        elif opt =='0.2': # compute frame difference
+            vp.setSingleProcess()
+            vp.computeMaxDiff()
+        elif opt =='0.21': # merge frame difference into one file
+            vp.computeMaxDiffCombine()
+        elif opt =='0.3': # shot detection
+            threshold_dark = 50;
+            threshold_diff = 20
+            vp.computeShot(threshold_dark = threshold_dark, threshold_diff = threshold_diff)
+
         elif opt == '0.9':
             output_folder = vp.getFrameName(0)
             output_folder = output_folder[:output_folder.rfind('/')] + '_ds/'

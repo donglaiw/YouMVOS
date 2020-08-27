@@ -21,21 +21,24 @@ if __name__ == "__main__":
 
     vp.setFolders(data_folder, web_folder, share_folder)
 
-    vp.setInputVideoTxt('data/video_v0.txt')
-    video_v0 = vp.video_all_name
+    #vp.setInputVideoTxt('data/video_v0.txt')
+    #video_v0 = vp.video_all_name
     vp.setInputVideoJson('data/video.json')
 
 
-    #for video_name in vp.video_all_name:
-    for video_name in video_v0:
+    for video_name in vp.video_all_name:
+    #for video_name in video_v0:
         print('process video: ', video_name)
         vp.setVideoInfo(video_name)
         # Set up the web proofreading for shot detection and classification
         if opt == '0':
             # Prepage images
-            vp.copyFrames(vp.video_web_folder, frame_downsample = 4)
+            vp.copyFrames(vp.video_web_folder % 'frame_ds/', frame_downsample = vp.video_frame_size[1]//320)
+        elif opt == '0.01': # clean up
+            import pdb; pdb.set_trace()
         elif opt == '0.1':
             # Generate htmls/js
+            #vp.webProofreadFolder()
             vp.webProofreadShot()
         elif opt == '0.2':
             # Copy final js result: web -> data
@@ -50,7 +53,11 @@ if __name__ == "__main__":
             shutil.copy(file_in, folder_out)
         elif opt == '1.1':
             # Prepage images
-            vp.copyFrames(vp.video_share_folder + 'im/')
+            if 'music' not in video_name:
+                continue
+            import pdb; pdb.set_trace()
+            vp.copyFrames('db/export/' + self.video_url + 'im/')
+            #vp.copyFrames(vp.video_share_folder + 'im/')
         elif opt == '1.2':
             # Generate vsvi files for VAST
             vp.setRedo(True)
@@ -81,6 +88,7 @@ if __name__ == "__main__":
                     shutil.copy(ims[i], Do2 + '%04d.png' % np.where(frames == fid[i])[0][0])
         elif opt == '1.5':
             # Refine the seg with grabcut
+            pass
 
 
         elif opt == '2':
