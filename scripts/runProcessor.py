@@ -16,6 +16,7 @@ if __name__ == "__main__":
     data_folder = param['DATA_FOLDER']
     web_folder = param['WEB_FOLDER']
     share_folder = param['SHARE_FOLDER']
+    share_folder = '/n/boslfs/LABS/lichtman_lab/Donglai/youtop/share/'
     detectron2_folder = param['DETECTRON2_FOLDER']
 
     fn = 'data/video'
@@ -56,9 +57,11 @@ if __name__ == "__main__":
             cmd_file = 'db/tmp.sh'
             if vid == 0:
                 vutil.writetxt(cmd_file, ['#/bin/bash'])
+
+            if video_name[video_name.rfind('/')+1:] not in ['cmSbXsFE3l8','bnVUHWCynig']:
+                continue
             vp.computeDetectron2Seg(detectron2_folder, 1, \
-                                    output_folder = vp.getKeyframeSegmentFolder(vp.video_data_folder, 1), \
-                                    shot_file = vp.video_data_folder,
+                                    output_folder = vp.getKeyframeSegmentFolder(option=1), \
                                     cmd_file = cmd_file)
         elif opt == '1.1': # copy seg result: data_folder -> share_folder
             seg_in = vp.getKeyframeSegmentFolder(vp.video_data_folder, 1)

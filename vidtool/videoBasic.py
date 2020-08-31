@@ -93,12 +93,6 @@ class videoBasic(object):
             frame_suf = ['_all', '_shot_bd', '_shot'][option]
         return frame_suf
 
-    def getKeyframeSegmentFolder(self, output_folder = None, option = 0):
-        frame_suf = self.getKeyframeSuf(option)
-        if output_folder is None:
-            output_folder = self.video_share_folder
-        output_folder += 'seg%s/' % frame_suf
-        return output_folder
 
     def getKeyframeIndex(self, option = 0, shot_folder = None, frame_rate = -1, frame_num = -1):
         # returninput can either be the input frame index
@@ -125,9 +119,9 @@ class videoBasic(object):
                 shot_js = self.getShotJs(shot_folder)
                 shots, shot_selection = self.convertShotJsToArr(shot_js, option=1)
                 if option == 1: 
-                    # Boundary frames in selected shots
+                    # first frames in selected shots
                     # Exist single-frame shots
-                    frame_id = np.unique(shots[shot_selection == 0])
+                    frame_id = np.unique(shots[shot_selection == 0, 0])
                 elif option == 2: 
                     # All frames in selected shots
                     frame_id = []

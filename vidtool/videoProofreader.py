@@ -42,9 +42,10 @@ class videoProofreader(videoBasic):
             output = html_proofread_shot % ('../../../frame_ds/', self.video_name, (self.video_frame_num + self.video_frame_rate - 1) // self.video_frame_rate, self.video_frame_rate)
             vutil.writetxt(output_shot_html, output)
 
-    def vastProofreadSeg(self, frame_index = 0, shot_js = None, output_folder = None):
+    def vastProofreadSeg(self, frame_index = 0, frame_suf=None, shot_js = None, output_folder = None):
         # Output im.vsvi and seg.vsvi for VAST-lite proofreading
-        frame_suf = self.getKeyframeSuf(frame_index)
+        if frame_suf is None:
+            frame_suf = self.getKeyframeSuf(frame_index)
         if isinstance(frame_index, int):
             # frame_index is the option
             frame_index = self.getKeyframeIndex(frame_index, shot_js)

@@ -16,8 +16,9 @@ if __name__ == "__main__":
     vp = videoProofreader(job_id, job_num)
     data_folder = param['DATA_FOLDER']
     web_folder = param['WEB_FOLDER']
-    web_folder = '/var/www/html/donglai/movie/'
+    #web_folder = '/var/www/html/donglai/movie/'
     share_folder = param['SHARE_FOLDER']
+    share_folder = '/n/boslfs/LABS/lichtman_lab/Donglai/youtop/share/'
 
     vp.setFolders(data_folder, web_folder, share_folder)
 
@@ -53,22 +54,26 @@ if __name__ == "__main__":
             shutil.copy(file_in, folder_out)
         elif opt == '1.1':
             # Prepage images
-            if 'music' not in video_name:
+            if video_name[video_name.rfind('/')+1:] not in ['cmSbXsFE3l8','bnVUHWCynig']:
                 continue
-            import pdb; pdb.set_trace()
-            vp.copyFrames('db/export/' + self.video_url + 'im/')
-            #vp.copyFrames(vp.video_share_folder + 'im/')
+            #vp.copyFrames('db/export/' + self.video_url + 'im/')
+            vp.copyFrames(vp.video_share_folder + 'im/')
         elif opt == '1.2':
-            # Generate vsvi files for VAST
-            vp.setRedo(True)
-            vp.vastProofreadSeg(frame_index = 1)
-        elif opt == '1.3':
             # Generate shot.txt from shot.js
+            if 'music_video' not in video_name:
+                continue
             js_out = vp.getShotTxt(vp.video_share_folder)
             if not os.path.exists(js_out):
+                print('do it')
                 js_in = vp.getShotJs()
                 shots, shot_selection = vp.convertShotJsToArr(js_in, 2)
+                vutil.mkdir(js_out, 1)
                 np.savetxt(js_out, shots[shot_selection == 0], '%d')
+        elif opt == '1.3':
+            # Generate shot_bd.vsvi files for VAST
+            if 'music_video' not in video_name:
+                continue
+            vp.vastProofreadSeg(frame_index = 1)
         elif opt == '1.4':
             # rename seg_out/images
             from glob import glob
@@ -80,12 +85,12 @@ if __name__ == "__main__":
                 ims = sorted(glob(Do + 'seg_out/*.png')) 
                 assert len(ims) == len(fid)
                 Do2 = Do + 'seg_out_all/'
-                import pdb; pdb.set_trace()
                 vutil.mkdir(Do2)
                 frames = range(0, vp.video_frame_num, vp.video_frame_rate)
                 for i in range(len(fid)):
                     print(np.where(frames == fid[i])[0][0])
                     shutil.copy(ims[i], Do2 + '%04d.png' % np.where(frames == fid[i])[0][0])
+
         elif opt == '1.5':
             # Refine the seg with grabcut
             if 'F4tHL8reNCs' in video_name:
