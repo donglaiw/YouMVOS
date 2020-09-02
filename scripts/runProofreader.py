@@ -1,4 +1,5 @@
-import os,sys,shutil
+import os,sys
+import shutil,glob
 import json
 from vidtool.videoProofreader import videoProofreader
 from vidtool import videoUtil as vutil
@@ -18,7 +19,6 @@ if __name__ == "__main__":
     web_folder = param['WEB_FOLDER']
     #web_folder = '/var/www/html/donglai/movie/'
     share_folder = param['SHARE_FOLDER']
-    share_folder = '/n/boslfs/LABS/lichtman_lab/Donglai/youtop/share/'
 
     vp.setFolders(data_folder, web_folder, share_folder)
 
@@ -54,7 +54,8 @@ if __name__ == "__main__":
             shutil.copy(file_in, folder_out)
         elif opt == '1.1':
             # Prepage images
-            if video_name[video_name.rfind('/')+1:] not in ['cmSbXsFE3l8','bnVUHWCynig']:
+            import pdb; pdb.set_trace()
+            if video_name[video_name.rfind('/')+1:] not in ['iS1g8G_njx8','9bZkp7q19f0']:
                 continue
             #vp.copyFrames('db/export/' + self.video_url + 'im/')
             vp.copyFrames(vp.video_share_folder + 'im/')
@@ -71,18 +72,30 @@ if __name__ == "__main__":
                 np.savetxt(js_out, shots[shot_selection == 0], '%d')
         elif opt == '1.3':
             # Generate shot_bd.vsvi files for VAST
+            vp.vastProofreadSeg(frame_index = 1)
+        elif opt == '1.31': # move files
+            # Generate shot.txt from shot.js
             if 'music_video' not in video_name:
                 continue
-            vp.vastProofreadSeg(frame_index = 1)
+            if os.path.exists(vp.video_share_folder + 'seg_shot_bd/'):
+                shutil.move(vp.video_share_folder + 'seg_shot_bd/',\
+                            vp.video_share_folder + 'seg/')
+
+            if os.path.exists(vp.video_share_folder + 'seg/'):
+                fns = glob.glob(vp.video_share_folder + 'seg/*.png')
+                for j in range(len(fns)):
+                    if fns[j][fns[j].rfind('/')+1:fns[j].rfind('/')+3] == '_s':
+                        import pdb; pdb.set_trace()
+                        shutil.move(fns[j], fns[j][:fns[j].rfind('/')+1] + 'seg_' + fns[j][fns[j].rfind('/')+3:])
+
         elif opt == '1.4':
             # rename seg_out/images
-            from glob import glob
             Do = vp.video_share_folder
             if os.path.exists(Do + 'seg_out/') and not os.path.exists(Do + 'seg.vsseg'):
                 print(Do)
                 Dw = vp.video_web_folder.replace('movie///%s','movie/download')
                 fid = np.loadtxt(Dw + 'fid.txt').astype(int)
-                ims = sorted(glob(Do + 'seg_out/*.png')) 
+                ims = sorted(glob.glob(Do + 'seg_out/*.png')) 
                 assert len(ims) == len(fid)
                 Do2 = Do + 'seg_out_all/'
                 vutil.mkdir(Do2)
