@@ -32,6 +32,9 @@ if __name__ == "__main__":
         print('process video: ', video_name)
         vp.setVideoInfo(video_name)
         # Set up the web proofreading for shot detection and classification
+        if video_name[video_name.rfind('/')+1:] not in ['AbBe0MjtN1I']:
+            continue
+
         if opt == '0':
             # Prepage images
             vp.copyFrames(vp.video_web_folder % 'frame_ds/', frame_downsample = vp.video_frame_size[1]//320)
@@ -40,6 +43,7 @@ if __name__ == "__main__":
         elif opt == '0.1':
             # Generate htmls/js
             #vp.webProofreadFolder()
+            vp.setRedo(True)
             vp.webProofreadShot()
         elif opt == '0.2':
             # Copy final js result: web -> data
@@ -54,26 +58,21 @@ if __name__ == "__main__":
             shutil.copy(file_in, folder_out)
         elif opt == '1.1':
             # Prepage images
-            if video_name[video_name.rfind('/')+1:] not in ['cmSbXsFE3l8','bnVUHWCynig']:
-                continue
             #vp.copyFrames('db/export/' + self.video_url + 'im/')
             vp.copyFrames(vp.video_share_folder + 'im/')
         elif opt == '1.2':
             # Generate shot.txt from shot.js
-            if 'music_video' not in video_name:
-                continue
             js_out = vp.getShotTxt(vp.video_share_folder)
             if not os.path.exists(js_out):
-                print('do it')
+                print('do it', video_name)
                 js_in = vp.getShotJs()
                 shots, shot_selection = vp.convertShotJsToArr(js_in, 2)
                 vutil.mkdir(js_out, 1)
                 np.savetxt(js_out, shots[shot_selection == 0], '%d')
         elif opt == '1.3':
             # Generate shot_bd.vsvi files for VAST
-            if 'music_video' not in video_name:
-                continue
             vp.vastProofreadSeg(frame_index = 1)
+            print(video_name)
         elif opt == '1.4':
             # rename seg_out/images
             from glob import glob

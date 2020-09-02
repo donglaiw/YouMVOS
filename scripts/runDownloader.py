@@ -43,10 +43,3 @@ if __name__ == "__main__":
             if vid ==0:
                 vutil.VideoTxtToJson(fn + '.txt', fn + '.json', data_folder, data_folder)
             break;
-        elif opt == '0.9':
-            # move files
-            output_file = vd.getVideoPath()
-            output_file_old = output_file[:output_file.rfind('/')] + '.mp4'
-            if os.path.exists(output_file_old):
-                print(output_file_old)
-                shutil.move(output_file_old, output_file)

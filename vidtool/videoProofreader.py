@@ -17,11 +17,11 @@ class videoProofreader(videoBasic):
     def webProofreadFolder(self):
         folder_name = (self.video_web_folder % 'proofread/')[:-1]
         folder_name = folder_name[:folder_name.rfind('/') + 1]
-        if not os.path.exists(folder_name + 'saved/'):
-            os.mkdir(folder_name + 'saved/')
-            os.chmod(folder_name + 'saved/', 0o777)
-        vutil.mkdir(folder_name + 'test/')
-        vutil.mkdir(folder_name + 'result/')
+        if not os.path.exists(folder_name + '/saved/'):
+            os.mkdir(folder_name + '/saved/')
+            os.chmod(folder_name + '/saved/', 0o777)
+        vutil.mkdir(folder_name + '/test/')
+        vutil.mkdir(folder_name + '/result/')
 
     def webProofreadShot(self, input_shot_txt = None, output_shot_folder = None, frame_rate = -1):
         # Convert shot_txt into js and html

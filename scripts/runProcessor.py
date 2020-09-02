@@ -24,6 +24,10 @@ if __name__ == "__main__":
     vp.setInputVideoJson(fn + '.json')
 
     for vid,video_name in enumerate(vp.video_all_name[job_id::job_num]):
+
+        if video_name[:video_name.rfind('/')] not in ['movie_trailer']:
+        #if video_name[video_name.rfind('/')+1:] not in ['cmSbXsFE3l8','bnVUHWCynig']:
+            continue
         print('process video: ', video_name)
         vp.setVideoInfo(video_name)
         # Set up the web proofreading for shot detection and classification
@@ -45,23 +49,14 @@ if __name__ == "__main__":
             threshold_diff = 20
             vp.computeShot(threshold_dark = threshold_dark, threshold_diff = threshold_diff)
 
-        elif opt == '0.9':
-            output_folder = vp.getFrameName(0)
-            output_folder = output_folder[:output_folder.rfind('/')] + '_ds/'
-            input_folder = 'db/export/' + vp.video_name + 'frame_ds/'
-            if os.path.exists(input_folder):
-                shutil.move(input_folder, output_folder)
-
         # Segmentation: Detectron2
         elif opt == '1':
             cmd_file = 'db/tmp.sh'
             if vid == 0:
                 vutil.writetxt(cmd_file, ['#/bin/bash'])
 
-            if video_name[video_name.rfind('/')+1:] not in ['cmSbXsFE3l8','bnVUHWCynig']:
-                continue
-            vp.computeDetectron2Seg(detectron2_folder, 1, \
-                                    output_folder = vp.getKeyframeSegmentFolder(option=1), \
+            vp.computeDetectron2Seg(detectron2_folder, frame_index=0, \
+                                    output_folder = vp.video_share_folder + 'seg/', \
                                     cmd_file = cmd_file)
         elif opt == '1.1': # copy seg result: data_folder -> share_folder
             seg_in = vp.getKeyframeSegmentFolder(vp.video_data_folder, 1)
