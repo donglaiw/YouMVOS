@@ -6,6 +6,16 @@ from scipy.ndimage import zoom
 import imageio
 import numpy as np
 
+GENRE = {}
+GENRE['animation'] = 'kid-animation'
+GENRE['kid'] = 'kid-animation'
+GENRE['cartoon'] = 'kid-animation'
+GENRE['history'] = 'education'
+GENRE['vlog'] = 'skit-show'
+GENRE['comedy'] = 'skit-show'
+GENRE['interview'] = 'skit-show'
+
+
 def getVideoInfo(video_url):
     output_file = 'db/tmp.info'
     os.system('ffprobe %s > %s 2>&1' % (video_url, output_file))
@@ -45,6 +55,7 @@ def downloadVideo(video_url, output_mp4 = None):
     if not os.path.exists(output_mp4):
         # 136: 1280x720
         if video_url[0] == '-':
+            output_mp4 = '-- ' + output_mp4
             video_url = '-- ' + video_url
         cmd = "youtube-dl --no-check-certificate -f 136 " + video_url + " -o " + output_mp4
         print(cmd)

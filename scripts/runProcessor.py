@@ -20,14 +20,16 @@ if __name__ == "__main__":
     detectron2_folder = param['DETECTRON2_FOLDER']
 
     fn = 'data/video'
+    fn = 'data/video_v1'
+    fn = 'data/video_v0'
     vp.setFolders(data_folder, web_folder, share_folder)
     vp.setInputVideoJson(fn + '.json')
 
     for vid,video_name in enumerate(vp.video_all_name[job_id::job_num]):
-
-        if video_name[:video_name.rfind('/')] not in ['movie_trailer']:
-        #if video_name[video_name.rfind('/')+1:] not in ['cmSbXsFE3l8','bnVUHWCynig']:
-            continue
+        if video_name[:video_name.rfind('/')]  in ['movie_trailer']:
+        #if video_name[video_name.rfind('/')+1:] not in ['1Fg5iWmQjwk']:
+            pass
+            #continue
         print('process video: ', video_name)
         vp.setVideoInfo(video_name)
         # Set up the web proofreading for shot detection and classification
@@ -47,15 +49,18 @@ if __name__ == "__main__":
         elif opt =='0.3': # shot detection
             threshold_dark = 50;
             threshold_diff = 20
-            vp.computeShot(threshold_dark = threshold_dark, threshold_diff = threshold_diff)
+            threshold_shot_len = 1
+            vp.computeShot(threshold_dark = threshold_dark, threshold_diff = threshold_diff, threshold_shot_len = threshold_shot_len)
 
         # Segmentation: Detectron2
         elif opt == '1':
-            cmd_file = 'db/tmp.sh'
+            cmd_file = 'db/tmp2.sh'
             if vid == 0:
                 vutil.writetxt(cmd_file, ['#/bin/bash'])
-
-            vp.computeDetectron2Seg(detectron2_folder, frame_index=0, \
+            # for movie_tralier, compute for all
+            frame_index = 1 # keyframes only
+            frame_index = 0 # all frames
+            vp.computeDetectron2Seg(detectron2_folder, frame_index = frame_index, \
                                     output_folder = vp.video_share_folder + 'seg/', \
                                     cmd_file = cmd_file)
         elif opt == '1.1': # copy seg result: data_folder -> share_folder

@@ -22,6 +22,8 @@ if __name__ == "__main__":
     vd.setFolders(data_folder, web_folder, share_folder)
     fn = 'data/video_cooking'
     fn = 'data/video'
+    fn = 'data/video_v0'
+    fn = 'data/video_v1'
     #vd.setInputVideoJson(fn + '.json')
     vd.setInputVideoTxt(fn + '.txt')
 

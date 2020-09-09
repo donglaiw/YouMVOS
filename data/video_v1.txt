@@ -18,14 +18,6 @@ music_video/k2qgadSvNyU, Dua Lipa, New rules
 music_video/bnVUHWCynig, Beyonce, Halo
 music_video/iS1g8G_njx8, Ariana Grande, Problem
 music_video/cmSbXsFE3l8, Anna Kendrick, Cups (Pitch Perfect’s “When I’m Gone”)
-kid/F4tHL8reNCs,LooLoo Kids,Johny Johny Yes Papa
-kid/qZsoesa55w,PINKFONG Songs for Children,Baby Shark Dance
-kid/WRVsOCh907o,CoComelon Nursery Rhymes & Kids Songs,Bath Song
-kid/astISOttCQ0,icanrockyourworld,the gummy bear song
-animation/yrynT4T55Xc,Jingle Toons,Hindi: Nani Teri Morni Ko Mor Le Gaye
-animation/J9IdcVG0Z-s,Jonni Valentayn,Tom and Jerry-47 Episode-Little Quacker (1950)
-animation/L0MK7qz13bU,Disney UK,Frozen-Let it Go
-animation/KYniUCGPGLs,Get Movies,Masha and The Bear-Recipe for disaster (Episode 17)
 cooking/3nUKwvFsjA4,cooking show with James Corden,English Breakfast with Gordon and Matilda Ramsay
 cooking/DnQ09ZZCjCs, Paik's Cuisine, Easy Kimchi Jjigae (Kimchi Stew) Paik Jong Won's Paik Jong Won Recipe
 cooking/vQZPHRbnep8, ARS Primitive Cooking, Cooking Duck red Eggs and Heart for Food - Cooking Chicken red Eggs eating Delicious
@@ -46,12 +38,6 @@ cooking/pPY91NNt3ys, BuzzFeedVideo, Sushi Chef Reviews Cheap Sushi
 cooking/iUtLMkLhUKY, 办公室小野官方频道 Ms Yeah Official Channel, E97 How to Make 4 Noodle kind with 4 different Recipes in Office | Ms Yeah
 cooking/-rPX2pfhSQw, Marion's Kitchen, 15-minute Garlic Shrimp Udon Noodles - Marion's Kitchen
 cooking/M2TNdnT-QzY, Jonah Green, How to Make the Perfect Bowl of Ramen
-comedy/qVMW_1aZXRk, SNL,Donald Trump vs. Hillary Clinton Town Hall Debate Cold Open
-comedy/izh-j8KUYjs, Key &Peele, Awesome Hitler Story
-product/dfToHzOmwdI,Lit Mobile, Solar Power Bank Product Review
-vlog/0oPa3GJJDDA,funforlouis, EPIC WORLD ADVENTURE
-howto/j2C8MkY7Co8,Robert C. Hamilton,How To Calm A Crying Baby
-history/Yocja_N5s1I,CrashCourse,The Agricultural Revolution
 sports/wgVOgGLtPtc,NBA,Final 3:39 of Game 7 of the 2016 NBA Finals
 sports/4rp2aLQl7vg,FIFATV,Portugal v Spain - 2018 FIFA World Cup Russia
 sports/tG-IGNvfrg8,NHL,Emergency goalie steals the show in Chicago
@@ -102,76 +88,6 @@ pet/2BHtUJBMv90, Pam's Dog Academy, "How to" Stop your Dog from Jumping on the C
 pet/WUZUSD4477I, walter santi, Cat's Reaction to Treadmill !!
 pet/ZkGTX3PUSHc, Tucker Budzyn, My Dog Does Weird Things | PART 2
 pet/0Haxy5PvCuk, EVERYWHEREsometimes, Emperor Likes Me
-pet/xwidefc2wpc, truly, Living With Tigers: Family Share Home With Pet Tigers
-pet/V5Z6jQrjrLg, Lil BUB, The Story of BUB's Miraculous Recovery as She RACES UP THE STAIRS
-pet/z_AbfPXTKms, mugumogu, まるです。
-pet/WgoJsBDn1CM, Tito The Raccoon, I leave my pet raccoon unattended for an hour!
-pet/LPjblqE3xHk, James Kimball, Yuki The Talking Shiba Inu
-pet/_AtP7au_Q9w, foxalbiazul, Fox go FLOOF
-pet/YChHbz5VVoM, Pet Goose George, Pet Goose George™ shops at Walmart !!!
-pet/LyoZt1vXVRc, A Chick Called Albert, Raising A Baby Squirrel By Hand - A Childhood Dream
-pet/QlYUH5mARF0, Andrea Michelle Rambo, EVERYTHING You Need For A Pet Hedgehog!
-pet/1PmJbBG_0JM, EvanTubeHD, PuppyTubeHD!! Chloe the Goldendoodle Puppy in 4K!
-pet/xwidefc2wpc, truly, Living With Tigers: Family Share Home With Pet Tigers
-pet/V5Z6jQrjrLg, Lil BUB, The Story of BUB's Miraculous Recovery as She RACES UP THE STAIRS
-pet/z_AbfPXTKms, mugumogu, まるです。
-pet/WgoJsBDn1CM, Tito The Raccoon, I leave my pet raccoon unattended for an hour!
-pet/LPjblqE3xHk, James Kimball, Yuki The Talking Shiba Inu
-pet/_AtP7au_Q9w, foxalbiazul, Fox go FLOOF
-pet/YChHbz5VVoM, Pet Goose George, Pet Goose George™ shops at Walmart !!!
-pet/LyoZt1vXVRc, A Chick Called Albert, Raising A Baby Squirrel By Hand - A Childhood Dream
-pet/QlYUH5mARF0, Andrea Michelle Rambo, EVERYTHING You Need For A Pet Hedgehog!
-pet/1PmJbBG_0JM, EvanTubeHD, PuppyTubeHD!! Chloe the Goldendoodle Puppy in 4K!
-pet/xwidefc2wpc, truly, Living With Tigers: Family Share Home With Pet Tigers
-pet/V5Z6jQrjrLg, Lil BUB, The Story of BUB's Miraculous Recovery as She RACES UP THE STAIRS
-pet/z_AbfPXTKms, mugumogu, まるです。
-pet/WgoJsBDn1CM, Tito The Raccoon, I leave my pet raccoon unattended for an hour!
-pet/LPjblqE3xHk, James Kimball, Yuki The Talking Shiba Inu
-pet/_AtP7au_Q9w, foxalbiazul, Fox go FLOOF
-pet/YChHbz5VVoM, Pet Goose George, Pet Goose George™ shops at Walmart !!!
-pet/LyoZt1vXVRc, A Chick Called Albert, Raising A Baby Squirrel By Hand - A Childhood Dream
-pet/QlYUH5mARF0, Andrea Michelle Rambo, EVERYTHING You Need For A Pet Hedgehog!
-pet/1PmJbBG_0JM, EvanTubeHD, PuppyTubeHD!! Chloe the Goldendoodle Puppy in 4K!
-pet/xwidefc2wpc, truly, Living With Tigers: Family Share Home With Pet Tigers
-pet/V5Z6jQrjrLg, Lil BUB, The Story of BUB's Miraculous Recovery as She RACES UP THE STAIRS
-pet/z_AbfPXTKms, mugumogu, まるです。
-pet/WgoJsBDn1CM, Tito The Raccoon, I leave my pet raccoon unattended for an hour!
-pet/LPjblqE3xHk, James Kimball, Yuki The Talking Shiba Inu
-pet/_AtP7au_Q9w, foxalbiazul, Fox go FLOOF
-pet/YChHbz5VVoM, Pet Goose George, Pet Goose George™ shops at Walmart !!!
-pet/LyoZt1vXVRc, A Chick Called Albert, Raising A Baby Squirrel By Hand - A Childhood Dream
-pet/QlYUH5mARF0, Andrea Michelle Rambo, EVERYTHING You Need For A Pet Hedgehog!
-pet/1PmJbBG_0JM, EvanTubeHD, PuppyTubeHD!! Chloe the Goldendoodle Puppy in 4K!
-pet/xwidefc2wpc, truly, Living With Tigers: Family Share Home With Pet Tigers
-pet/V5Z6jQrjrLg, Lil BUB, The Story of BUB's Miraculous Recovery as She RACES UP THE STAIRS
-pet/z_AbfPXTKms, mugumogu, まるです。
-pet/WgoJsBDn1CM, Tito The Raccoon, I leave my pet raccoon unattended for an hour!
-pet/LPjblqE3xHk, James Kimball, Yuki The Talking Shiba Inu
-pet/_AtP7au_Q9w, foxalbiazul, Fox go FLOOF
-pet/YChHbz5VVoM, Pet Goose George, Pet Goose George™ shops at Walmart !!!
-pet/LyoZt1vXVRc, A Chick Called Albert, Raising A Baby Squirrel By Hand - A Childhood Dream
-pet/QlYUH5mARF0, Andrea Michelle Rambo, EVERYTHING You Need For A Pet Hedgehog!
-pet/1PmJbBG_0JM, EvanTubeHD, PuppyTubeHD!! Chloe the Goldendoodle Puppy in 4K!
-pet/xwidefc2wpc, truly, Living With Tigers: Family Share Home With Pet Tigers
-pet/V5Z6jQrjrLg, Lil BUB, The Story of BUB's Miraculous Recovery as She RACES UP THE STAIRS
-pet/z_AbfPXTKms, mugumogu, まるです。
-pet/WgoJsBDn1CM, Tito The Raccoon, I leave my pet raccoon unattended for an hour!
-pet/LPjblqE3xHk, James Kimball, Yuki The Talking Shiba Inu
-pet/_AtP7au_Q9w, foxalbiazul, Fox go FLOOF
-pet/YChHbz5VVoM, Pet Goose George, Pet Goose George™ shops at Walmart !!!
-pet/LyoZt1vXVRc, A Chick Called Albert, Raising A Baby Squirrel By Hand - A Childhood Dream
-pet/QlYUH5mARF0, Andrea Michelle Rambo, EVERYTHING You Need For A Pet Hedgehog!
-pet/1PmJbBG_0JM, EvanTubeHD, PuppyTubeHD!! Chloe the Goldendoodle Puppy in 4K!
-pet/xwidefc2wpc, truly, Living With Tigers: Family Share Home With Pet Tigers
-pet/V5Z6jQrjrLg, Lil BUB, The Story of BUB's Miraculous Recovery as She RACES UP THE STAIRS
-pet/z_AbfPXTKms, mugumogu, まるです。
-pet/WgoJsBDn1CM, Tito The Raccoon, I leave my pet raccoon unattended for an hour!
-pet/LPjblqE3xHk, James Kimball, Yuki The Talking Shiba Inu
-pet/_AtP7au_Q9w, foxalbiazul, Fox go FLOOF
-pet/YChHbz5VVoM, Pet Goose George, Pet Goose George™ shops at Walmart !!!
-pet/LyoZt1vXVRc, A Chick Called Albert, Raising A Baby Squirrel By Hand - A Childhood Dream
-pet/QlYUH5mARF0, Andrea Michelle Rambo, EVERYTHING You Need For A Pet Hedgehog!
-pet/1PmJbBG_0JM, EvanTubeHD, PuppyTubeHD!! Chloe the Goldendoodle Puppy in 4K!
 pet/xwidefc2wpc, truly, Living With Tigers: Family Share Home With Pet Tigers
 pet/V5Z6jQrjrLg, Lil BUB, The Story of BUB's Miraculous Recovery as She RACES UP THE STAIRS
 pet/z_AbfPXTKms, mugumogu, まるです。

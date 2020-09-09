@@ -1,4 +1,5 @@
-import os,sys,shutil
+import os,sys
+import shutil,glob
 import json
 from vidtool.videoProofreader import videoProofreader
 from vidtool import videoUtil as vutil
@@ -18,22 +19,26 @@ if __name__ == "__main__":
     web_folder = param['WEB_FOLDER']
     #web_folder = '/var/www/html/donglai/movie/'
     share_folder = param['SHARE_FOLDER']
-    share_folder = '/n/boslfs/LABS/lichtman_lab/Donglai/youtop/share/'
 
     vp.setFolders(data_folder, web_folder, share_folder)
+    
+    fn = 'data/video'
+    fn = 'data/video_v1'
 
     #vp.setInputVideoTxt('data/video_v0.txt')
     #video_v0 = vp.video_all_name
-    vp.setInputVideoJson('data/video.json')
+    vp.setInputVideoJson(fn + '.json')
 
 
     for video_name in vp.video_all_name:
     #for video_name in video_v0:
-        print('process video: ', video_name)
-        vp.setVideoInfo(video_name)
         # Set up the web proofreading for shot detection and classification
-        if video_name[video_name.rfind('/')+1:] not in ['AbBe0MjtN1I']:
-            continue
+        if video_name[:video_name.rfind('/')] not in ['movie_trailer']:
+        #if video_name[video_name.rfind('/')+1:] not in ['JGwWNGJdvx8']:
+            #continue
+            pass
+        vp.setVideoInfo(video_name)
+        print('process video: ', video_name)
 
         if opt == '0':
             # Prepage images
@@ -58,7 +63,6 @@ if __name__ == "__main__":
             shutil.copy(file_in, folder_out)
         elif opt == '1.1':
             # Prepage images
-            #vp.copyFrames('db/export/' + self.video_url + 'im/')
             vp.copyFrames(vp.video_share_folder + 'im/')
         elif opt == '1.2':
             # Generate shot.txt from shot.js
@@ -71,17 +75,17 @@ if __name__ == "__main__":
                 np.savetxt(js_out, shots[shot_selection == 0], '%d')
         elif opt == '1.3':
             # Generate shot_bd.vsvi files for VAST
-            vp.vastProofreadSeg(frame_index = 1)
-            print(video_name)
+            vp.setRedo(True)
+            vp.vastProofreadSeg(frame_index = 0) # all frames
+            #vp.vastProofreadSeg(frame_index = 1) # only first frame per shot
         elif opt == '1.4':
             # rename seg_out/images
-            from glob import glob
             Do = vp.video_share_folder
             if os.path.exists(Do + 'seg_out/') and not os.path.exists(Do + 'seg.vsseg'):
                 print(Do)
                 Dw = vp.video_web_folder.replace('movie///%s','movie/download')
                 fid = np.loadtxt(Dw + 'fid.txt').astype(int)
-                ims = sorted(glob(Do + 'seg_out/*.png')) 
+                ims = sorted(glob.glob(Do + 'seg_out/*.png')) 
                 assert len(ims) == len(fid)
                 Do2 = Do + 'seg_out_all/'
                 vutil.mkdir(Do2)
