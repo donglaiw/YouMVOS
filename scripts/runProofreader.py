@@ -17,13 +17,13 @@ if __name__ == "__main__":
     vp = videoProofreader(job_id, job_num)
     data_folder = param['DATA_FOLDER']
     web_folder = param['WEB_FOLDER']
-    #web_folder = '/var/www/html/donglai/movie/'
     share_folder = param['SHARE_FOLDER']
 
     vp.setFolders(data_folder, web_folder, share_folder)
     
     fn = 'data/video'
     fn = 'data/video_v1'
+    fn = 'data/video_v0'
 
     #vp.setInputVideoTxt('data/video_v0.txt')
     #video_v0 = vp.video_all_name
@@ -96,9 +96,22 @@ if __name__ == "__main__":
 
         elif opt == '1.5':
             # Refine the seg with grabcut
+            # TODO: add Sid's code
             if 'F4tHL8reNCs' in video_name:
                 vp.RefineSeg(iter_image = 30, iter_algo = 20)
 
+        elif opt == '1.6': # copy Sid's visualization results to webserver
+            Di = vp.video_share_folder + 'overlays/'
+            Do = vp.video_web_folder % 'seg_ds/'
+            vutil.mkdir(Do)
+            file_in = glob.glob(Di + '/*.png')
+            file_out = glob.glob(Do + '/*.png')
+            if len(file_in)>0 and len(file_out)!=len(file_in):
+                print('copy')
+                for ff in file_in:
+                    file_name = ff[ff.rfind('/')+1:]
+                    if not os.path.exists(Do+file_name):
+                        shutil.copyfile(ff, Do+file_name)
 
         elif opt == '2':
             f0 = vp.video_name[:vp.video_name.find('/')]
