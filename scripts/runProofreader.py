@@ -24,7 +24,9 @@ if __name__ == "__main__":
     
     fn = 'data/video'
     fn = 'data/video_v1'
-    #fn = 'data/video_v0'
+    vopt=0;vv=['music_video']
+    vopt=1;vv=['9bZkp7q19f0']
+    fn = 'data/video_v0';vv=[]
 
     #vp.setInputVideoTxt('data/video_v0.txt')
     #video_v0 = vp.video_all_name
@@ -34,10 +36,13 @@ if __name__ == "__main__":
     for video_name in vp.video_all_name:
     #for video_name in video_v0:
         # Set up the web proofreading for shot detection and classification
-        #if video_name[:video_name.rfind('/')] not in ['cooking']:
-        if video_name[video_name.rfind('/')+1:] not in ['iS1g8G_njx8','7PCkvCPvDXk']:
-            #continue
-            pass
+        if len(vv) > 0 :
+            if vopt == 0:
+                if video_name[:video_name.rfind('/')] not in vv:
+                    continue
+            elif vopt == 1:
+                if video_name[video_name.rfind('/')+1:] not in vv:
+                    continue
         vp.setVideoInfo(video_name)
         print('process video: ', video_name)
 
@@ -102,10 +107,16 @@ if __name__ == "__main__":
             # TODO: add Sid's code
             if 'F4tHL8reNCs' in video_name:
                 vp.RefineSeg(iter_image = 30, iter_algo = 20)
-
-        elif opt == '1.6': # copy Sid's visualization results to webserver
+        
+        # copy files: hp03 -> server
+        elif opt == '2':
+            # refinement for display 
             Di = vp.video_share_folder + 'overlays/'
             Do = vp.video_web_folder % 'seg_ds/'
+            # shot boundary 
+            #Di = vp.video_share_folder + 'seg_shot_bd/'
+            #Do = vp.video_web_folder % 'proofread/'
+
             vutil.mkdir(Do)
             file_in = glob.glob(Di + '/*.png')
             file_out = glob.glob(Do + '/*.png')
@@ -115,9 +126,3 @@ if __name__ == "__main__":
                     file_name = ff[ff.rfind('/')+1:]
                     if not os.path.exists(Do+file_name):
                         shutil.copyfile(ff, Do+file_name)
-
-        elif opt == '2':
-            #f0 = vp.video_name[:vp.video_name.find('/')]
-            #f1 = vp.video_name[vp.video_name.find('/')+1:]
-            os.system('mkdir -p '+(vp.video_web_folder%'seg_ds'))
-            #print('mv',vp.video_share_folder+'../new/'+f1+'/*.png',vp.video_share_folder+'im/')

@@ -1,7 +1,8 @@
 {
+    "_comment_" : "hp03 version",
     "DATA_FOLDER" : "/n/pfister_lab2/Lab/vcg_natural/youtubeE-vis/",
-    "WEB_FOLDER" : "/n/boslfs02/LABS/lichtman_lab/glichtman/public/vcg/youtop-vis/youtube/",
-    "SHARE_FOLDER" : "/n/boslfs/LABS/lichtman_lab/Donglai/youtop/share/",
+    "WEB_FOLDER" : "/mnt/boslfs/Donglai/youtop/web/",
+    "SHARE_FOLDER" : "/home/donglai/google-drive/YouTubeTop-vis/",
     "LIB_DETECTRON2_FOLDER" : "/n/pfister_lab2/Lab/donglai/lib/pipeline/detectron2/", 
     "LIB_STM_FOLDER" : "/n/pfister_lab2/Lab/donglai/lib/pipeline/STM/", 
     "LIB_FFMPEG" : "/n/home04/donglai/local/bin/ffmpeg "
