@@ -4,8 +4,7 @@ import numpy as np
 from glob import glob
 import imageio
 
-from .views import html_proofread_shot
-from .views import vsvi_proofread_seg
+from .views import *
 
 from .videoBasic import videoBasic
 from . import videoUtil as vutil
@@ -23,24 +22,60 @@ class videoProofreader(videoBasic):
         vutil.mkdir(folder_name + '/test/')
         vutil.mkdir(folder_name + '/result/')
 
-    def webProofreadShot(self, input_shot_txt = None, output_shot_folder = None, frame_rate = -1):
+    def webProofreadShot(self, input_txt = None, output_folder = None, frame_rate = -1):
         # Convert shot_txt into js and html
         if frame_rate < 0 :
             frame_rate = self.video_frame_rate
 
-        output_shot_js = self.getShotJs(output_shot_folder)
-        if self.redo or not os.path.exists(output_shot_js):
+        output_js = self.getJs(output_folder, '_shot')
+        if self.redo or not os.path.exists(output_js):
             print('do js')
-            input_shot_file = self.getShotTxt(input_shot_txt)
-            shots = np.loadtxt(input_shot_file).astype(int)
+            import pdb; pdb.set_trace()
+            input_file = self.getTxt(input_txt, 'shot')
+            shots = np.loadtxt(input_file).astype(int)
             output_var = self.convertShotArrToJs(shots, frame_rate)
-            vutil.writetxt(output_shot_js, output_var)
+            vutil.writetxt(output_js, output_var)
 
-        output_shot_html = self.getShotHtml(output_shot_folder)
-        if self.redo or not os.path.exists(output_shot_html):
-            print('do html')
-            output = html_proofread_shot % ('../../../frame_ds/', self.video_name, (self.video_frame_num + self.video_frame_rate - 1) // self.video_frame_rate, self.video_frame_rate)
-            vutil.writetxt(output_shot_html, output)
+        output_html = self.getHtml(output_folder, '_shot')
+        if self.redo or not os.path.exists(output_html):
+            print('do shot')
+            output = html_shot % ('../../../frame_ds/', self.video_name, (self.video_frame_num + self.video_frame_rate - 1) // self.video_frame_rate, self.video_frame_rate)
+            vutil.writetxt(output_html, output)
+
+    def webProofreadCluster(self, input_txt = None, output_folder = None, frame_rate = -1):
+        # Convert shot_txt into js and html
+        if frame_rate < 0 :
+            frame_rate = self.video_frame_rate
+
+        output_js = self.getJs(output_folder, '_cluster')
+        if self.redo or not os.path.exists(output_js):
+            print('do js')
+            input_file = self.getTxt(input_txt, 'cluster')
+            if os.path.exists(input_file):
+                shots = np.loadtxt(input_file).astype(int)
+            else: # default 1 cluster
+                shots = [self.getKeyframeIndex()]
+            output_var = self.convertClusterListToJs(shots)
+            vutil.writetxt(output_js, output_var)
+
+        output_html = self.getHtml(output_folder, '_cluster')
+        if self.redo or not os.path.exists(output_html):
+            print('do cluster')
+            output = html_cluster % ('../../../frame_ds/', self.video_name, (self.video_frame_num + self.video_frame_rate - 1) // self.video_frame_rate)
+            vutil.writetxt(output_html, output)
+
+    def webProofreadSeg(self, input_txt = None, output_folder = None, frame_rate = -1):
+        # Convert shot_txt into js and html
+        if frame_rate < 0 :
+            frame_rate = self.video_frame_rate
+
+        output_html = self.getHtml(output_folder, '_seg')
+        if self.redo or not os.path.exists(output_html):
+            print('do seg')
+            overlay_files = sorted(glob(output_html[:output_html.rfind('/')] + '/../../../seg_ds/'+self.video_name+'/*.png'))
+            overlay_id = ','.join([str(int(x[x.rfind('_')+1:-4])) for x in overlay_files]) 
+            output = html_seg % ('../../../frame_ds/', '../../../seg_ds/', self.video_name, overlay_id, (self.video_frame_num + self.video_frame_rate - 1) // self.video_frame_rate, self.video_frame_rate)
+            vutil.writetxt(output_html, output)
 
     def vastProofreadSeg(self, frame_index = 0, frame_suf=None, shot_js = None, output_folder = None):
         # Output im.vsvi and seg.vsvi for VAST-lite proofreading
@@ -65,7 +100,7 @@ class videoProofreader(videoBasic):
             if self.redo or not os.path.exists(output_vsvi):
                 meta = "%s %s" % (self.video_name, vsvi_type[vsvi_id])
                 image_template = r'.\%s\%s' % (vsvi_type[vsvi_id], vsvi_filename[vsvi_id])
-                output = vsvi_proofread_seg % (meta, image_template, 0, \
+                output = vsvi_seg % (meta, image_template, 0, \
                                                    image_template, frame_size[1], frame_size[0], \
                                                    frame_index_str, frame_size[1], frame_size[0], \
                                                    len(frame_index), meta)

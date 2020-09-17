@@ -17,7 +17,7 @@ if __name__ == "__main__":
     data_folder = param['DATA_FOLDER']
     web_folder = param['WEB_FOLDER']
     share_folder = param['SHARE_FOLDER']
-    ffmpeg = param['FFMPEG']
+    lib_ffmpeg = param['LIB_FFMPEG']
 
     vd.setFolders(data_folder, web_folder, share_folder)
     fn = 'data/video_cooking'
@@ -39,7 +39,7 @@ if __name__ == "__main__":
             vutil.checkVideoSize(vd.getVideoPath())
         elif opt == '0.2':
             # Extract frames
-            vd.getVideoFrames(ffmpeg)
+            vd.getVideoFrames(lib_ffmpeg)
         elif opt == '0.3':
             # Gather video information: txt -> json
             if vid ==0:

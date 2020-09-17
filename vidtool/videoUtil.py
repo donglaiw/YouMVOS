@@ -149,3 +149,19 @@ def segRefineGrabcut(im, seg, iter_image = 30, iter_algo = 50):
             out2 = np.where((out == cv2.GC_BGD) | (out == cv2.GC_PR_BGD), 0, 1)
             seg_new[out2 > 0] = i
     return seg_new
+
+def convertClusterStrToClusterList(cluster_str):
+    if cluster_str[-1] == ';':
+        cluster_str = cluster_str[:-1]
+    cluster_list = [[int(y) for y in x.split(',')] for x in cluster_str.split(';')]
+    return cluster_list
+
+def convertClusterListToStr(shots):
+    return ';'.join([','.join([str(y) for y in shots[x]]) for x in range(len(shots))]) 
+
+def convertClusterListToJs(shots):
+    cluster_str = convertClusterListToStr(shots)
+    output_js = 'var shot_index_str="' + cluster_str + '";'
+    output_js += 'var shot_selection_str="0";'
+    return output_js
+

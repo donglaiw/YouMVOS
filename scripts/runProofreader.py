@@ -17,13 +17,14 @@ if __name__ == "__main__":
     vp = videoProofreader(job_id, job_num)
     data_folder = param['DATA_FOLDER']
     web_folder = param['WEB_FOLDER']
-    #web_folder = '/var/www/html/donglai/movie/'
     share_folder = param['SHARE_FOLDER']
+    #web_folder = '/n/boslfs/LABS/lichtman_lab/Donglai/youtop/web/'
 
     vp.setFolders(data_folder, web_folder, share_folder)
     
     fn = 'data/video'
     fn = 'data/video_v1'
+    #fn = 'data/video_v0'
 
     #vp.setInputVideoTxt('data/video_v0.txt')
     #video_v0 = vp.video_all_name
@@ -33,8 +34,8 @@ if __name__ == "__main__":
     for video_name in vp.video_all_name:
     #for video_name in video_v0:
         # Set up the web proofreading for shot detection and classification
-        if video_name[:video_name.rfind('/')] not in ['movie_trailer']:
-        #if video_name[video_name.rfind('/')+1:] not in ['JGwWNGJdvx8']:
+        #if video_name[:video_name.rfind('/')] not in ['cooking']:
+        if video_name[video_name.rfind('/')+1:] not in ['iS1g8G_njx8','7PCkvCPvDXk']:
             #continue
             pass
         vp.setVideoInfo(video_name)
@@ -49,7 +50,9 @@ if __name__ == "__main__":
             # Generate htmls/js
             #vp.webProofreadFolder()
             vp.setRedo(True)
-            vp.webProofreadShot()
+            #vp.webProofreadShot()
+            #vp.webProofreadSeg()
+            vp.webProofreadCluster()
         elif opt == '0.2':
             # Copy final js result: web -> data
             js_in = vp.getShotJs()
@@ -101,7 +104,7 @@ if __name__ == "__main__":
 
 
         elif opt == '2':
-            f0 = vp.video_name[:vp.video_name.find('/')]
-            f1 = vp.video_name[vp.video_name.find('/')+1:]
-            print('mkdir -p',vp.video_share_folder+'im/')
+            #f0 = vp.video_name[:vp.video_name.find('/')]
+            #f1 = vp.video_name[vp.video_name.find('/')+1:]
+            os.system('mkdir -p '+(vp.video_web_folder%'seg_ds'))
             #print('mv',vp.video_share_folder+'../new/'+f1+'/*.png',vp.video_share_folder+'im/')

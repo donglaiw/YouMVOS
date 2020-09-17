@@ -13,6 +13,7 @@ class videoProcessor(videoBasic):
     def __init__(self, job_id = 0, job_num = 1, redo = False):
         super().__init__(job_id, job_num, redo)
 
+    # 1. Shot detection
     def getStat(self, stat, stat_folder = None):
         if stat_folder is None:
             stat_folder = self.video_data_folder
@@ -21,48 +22,7 @@ class videoProcessor(videoBasic):
             raise ValueError('File does not exist: ', stat_path)
         return np.loadtxt(stat_path).astype(int)
 
-    def processDownsample(self, output_folder = None, frame_downsample = 4, frame_rate = -1):
-        if output_folder is None:
-            output_folder = self.getFrameName(-2, suffix = '_ds')
-        if frame_rate < 0 :
-            frame_rate = self.video_frame_rate
-        if self.job_id == 0: # avoid multiple thread conflicts
-            vutil.mkdir(output_folder)
-
-        frame_size = np.array(self.getFrame(0).shape)
-        frame_size[:2] = (frame_size[:2] + frame_downsample - 1) // frame_downsample
-        frame_ids = self.getKeyframeIndex()
-        for frame_id in frame_ids[self.job_id :: self.job_num]:
-            output_file = self.getFrameName(frame_id, output_folder)
-            if not os.path.exists(output_file):
-                output = self.getFrame(frame_id)[::frame_downsample, ::frame_downsample]
-                imageio.imwrite(output_file, output)
-
-    def visualizeClip(self, frame_folder = None, output_file = None, frame_stride = 1, frame_num = -1, frame_duration = 0.2):
-        if frame_folder is None:
-            frame_folder = self.getFrameName(-2, suffix = '_ds')
-        if output_file is None:
-            output_file = (self.video_web_folder % 'gif')[: -1] + '_video.gif'
-
-        if not os.path.exists(output_file):
-            vutil.mkdir(output_file, 1)
-            frame_names = sorted(glob(frame_folder + '*.png')) 
-            if frame_num == -1:
-                frame_names = frame_names[::frame_stride]
-            else:
-                frame_names = [frame_names[int(x)] for x in np.linspace(0, len(frame_names)-1, frame_num)]
-
-            if len(frame_names) == 0:
-                raise ValueError('No frames in %s' % (frame_folder))
-            frame_size = list(imageio.imread(frame_names[0]).shape)
-            output = np.zeros([len(frame_names)] + frame_size, np.uint8)
-            for frame_id, frame_name in enumerate(frame_names):
-                output[frame_id] = imageio.imread(frame_name)
-
-            vutil.writegif(output_file, output, duration = frame_duration)
-
     def computeMaxDiff(self, frame_downsample=4):
-        
         if self.job_num != 1: # for long movies
             output_path_max = self.video_data_folder + 'rgb_max/'
             output_path_diff = self.video_data_folder + 'rgb_diff/'
@@ -170,73 +130,60 @@ class videoProcessor(videoBasic):
             
             np.savetxt(output_path, np.vstack(output), '%d')
 
+    # 2. Detectron2 for 2D instance segmentation
     def computeDetectron2Seg(self, detectron2_folder, frame_index = 0, \
-                             input_folder = None, output_folder = None, \
+                             image_folder = None, output_folder = None, \
                              shot_file = None, cmd_file = None):
         # https://github.com/donglaiw/detectron2
         frame_index = self.getKeyframeIndex(frame_index, shot_file)
         frame_index += 1 # ffmpeg
 
-        if input_folder is None:
-            input_folder = self.getFrameName(-1)
+        if image_folder is None:
+            image_folder = self.getFrameName(-1)
         if output_folder is None:
             output_folder =  self.video_share_folder + 'seg/'
         vutil.mkdir(output_folder)
 
-        cmd = 'python ' + detectron2_folder + 'demo/demo_dw.py --config-file  ' + detectron2_folder + 'projects/PointRend/configs/InstanceSegmentation/pointrend_rcnn_R_50_FPN_3x_coco.yaml --input-template %s --input-index %s --output %s --opts MODEL.WEIGHTS detectron2://PointRend/InstanceSegmentation/pointrend_rcnn_R_50_FPN_3x_coco/164955410/model_final_3c3198.pkl\n'
-        #cmd = 'python ' + detectron2_folder + 'demo/demo_dw.py --config-file  ' + detectron2_folder + 'configs/COCO-InstanceSegmentation/mask_rcnn_R_50_FPN_3x.yaml --input-template %s --input-index %s --output %s --opts MODEL.WEIGHTS detectron2://COCO-InstanceSegmentation/mask_rcnn_R_50_FPN_3x/137849600/model_final_f10217.pkl\n'
+        # pointrend
+        cmd = 'python ' + detectron2_folder + 'demo/demo_youtop.py --config-file  ' + detectron2_folder + 'projects/PointRend/configs/InstanceSegmentation/pointrend_rcnn_R_50_FPN_3x_coco.yaml --input-template %s --input-index %s --output %s --opts MODEL.WEIGHTS detectron2://PointRend/InstanceSegmentation/pointrend_rcnn_R_50_FPN_3x_coco/164955410/model_final_3c3198.pkl\n'
+        # maskrcnn
+        #cmd = 'python ' + detectron2_folder + 'demo/demo_youtop.py --config-file  ' + detectron2_folder + 'configs/COCO-InstanceSegmentation/mask_rcnn_R_50_FPN_3x.yaml --input-template %s --input-index %s --output %s --opts MODEL.WEIGHTS detectron2://COCO-InstanceSegmentation/mask_rcnn_R_50_FPN_3x/137849600/model_final_f10217.pkl\n'
         frame_index_str = ','.join([str(x) for x in frame_index])
-        cmd = cmd % (input_folder, frame_index_str, output_folder + 'seg_%05d.png')
+        cmd = cmd % (image_folder, frame_index_str, output_folder + 'seg_%05d.png')
         if cmd_file is None:
             print(cmd)
         else:
             vutil.writetxt(cmd_file, cmd, 'a')
 
-    def visualizeShot(self, frame_downsample = 4, num_gif_frame = 5, frame_duration = 0.2):
-        output_folder = self.export_folder+'shot/'
-        if self.job_id == 0: # avoid multiple thread conflicts
-            U_mkdir(output_folder)
+    # 3. STM for video object segmentation
+    def computeSTMSeg(self, STM_folder, index_type = 'shot_all_list', index_file = None, frame_index = None, \
+                             image_template = None, mask_folder = None, output_folder = None, \
+                             cmd_file = None):
+        # https://github.com/donglaiw/STM
+        # frame_index: list of arrays (cluster result) or Nx2 matrix (shot result)  
 
-        shot = self.getStat('shot')
-        frame_size = np.array(self.getFrame(0).shape)
-        frame_size[:2] = (frame_size[:2] + frame_downsample - 1) // frame_downsample
-        output = np.zeros([num_gif_frame] + list(frame_size), np.uint8)
-        for shot_id in range(self.job_id, shot.shape[0], self.job_num):
-            output_file = output_folder + '%d.gif'%shot_id
-            if not os.path.exists(output_file):
-                try:
-                    ll = np.linspace(shot[shot_id, 0], shot[shot_id, 1], num_gif_frame).astype(int)
-                except:
-                    import pdb; pdb.set_trace()
-                for j in range(num_gif_frame):
-                    output[j] = self.getFrame(ll[j])[::frame_downsample, ::frame_downsample]
-                writegif(output_file, output, duration = frame_duration)
 
-    def visualizeResult(self, frame_downsample = 4, frame_duration = 0.2, frame_alpha = 0.7):
-        output_file = self.output_folder+'%s_o.gif' % (self.video_name)
+        if index_type == 'shot_all_list':
+            if frame_index is None: 
+                frame_index = self.getKeyframeIndex(index_type, index_file, frame_offset = 1)
+            frame_index_str = vutil.convertClusterListToStr(frame_index)
+        elif index_type == 'cluster':
+            frame_index_str = self.loadClusterJs(cluster_js, 'selected_str')
+        else:
+            raise ValueError('unknown index_type: %s' % index_type)
 
-        if not os.path.exists(output_file):
-            result_frame_id = np.loadtxt(self.output_folder+'result/fid.txt').astype(int)
-            result_files = sorted(glob(self.output_folder+'result/*.png'))
-            assert len(result_frame_id) == len(result_files)
-        
-            frame_ids = np.arange(0, self.frame_num, self.fps)
-            frame_size = np.array(self.getFrame(0).shape)
-            frame_size[:2] = (frame_size[:2] + frame_downsample - 1) // frame_downsample
-            output = np.zeros([len(frame_ids)] + list(frame_size), np.uint8)
+        if image_template is None:
+            image_template = self.getFrameName(-1)
+        if mask_folder is None:
+            mask_folder =  self.video_share_folder + 'seg_shot_bd/'
+        if output_folder is None:
+            output_folder =  self.video_share_folder + 'seg_prop/'
+        vutil.mkdir(output_folder)
 
-            for i, frame_id in enumerate(frame_ids):
-                im = self.getFrame(frame_id)[::frame_downsample, ::frame_downsample]
-                if frame_id in result_frame_id:
-                    seg_id = int(np.where(result_frame_id==frame_id)[0])
-                    seg = imageio.imread(result_files[seg_id])[::frame_downsample, ::frame_downsample]
-                    if seg.ndim == 3:
-                        seg = seg[:,:,2]
-                    # label2rgb(seg, image = im) option converts the image into gray
-                    seg_colored = 255.*label2rgb(seg)
-                    seg_mask = np.tile(seg[:, :, None]>0, [1,1,3])
-                    im[seg_mask] = (im[seg_mask].astype(float) * frame_alpha + seg_colored[seg_mask] * (1 - frame_alpha)).astype(np.uint8)
-                output[i] = im
-            writegif(output_file, output, duration = frame_duration)
-
+        cmd = 'python ' + STM_folder + 'demo_youtop.py --image-template %s  --mask-folder %s --output-template %s --input-index %s --input-fps %d --image-step %d --stm-height 480 --shot-chunk-len 50\n'
+        cmd = cmd % (image_template, mask_folder, output_folder + 'seg_%05d.png', frame_index_str, self.video_frame_rate, 1)
+        if cmd_file is None:
+            print(cmd)
+        else:
+            vutil.writetxt(cmd_file, cmd, 'a')
 
