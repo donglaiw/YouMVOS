@@ -55,7 +55,7 @@ class videoProofreader(videoBasic):
                 shots = np.loadtxt(input_file).astype(int)
             else: # default 1 cluster
                 shots = [self.getKeyframeIndex()]
-            output_var = self.convertClusterListToJs(shots)
+            output_var = vutil.convertClusterListToJs(shots)
             vutil.writetxt(output_js, output_var)
 
         output_html = self.getHtml(output_folder, '_cluster')

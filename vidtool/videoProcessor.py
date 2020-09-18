@@ -176,12 +176,22 @@ class videoProcessor(videoBasic):
             image_template = self.getFrameName(-1)
         if mask_folder is None:
             mask_folder =  self.video_share_folder + 'seg_shot_bd/'
+        masks = glob(mask_folder + '/*.png')
+        if len(masks) == 0:
+            print("%s has no mask to run." % mask_folder)
+            return
         if output_folder is None:
             output_folder =  self.video_share_folder + 'seg_prop/'
         vutil.mkdir(output_folder)
-
-        cmd = 'python ' + STM_folder + 'demo_youtop.py --image-template %s  --mask-folder %s --output-template %s --input-index %s --input-fps %d --image-step %d --stm-height 480 --shot-chunk-len 50\n'
-        cmd = cmd % (image_template, mask_folder, output_folder + 'seg_%05d.png', frame_index_str, self.video_frame_rate, 1)
+        # sample rate: need to be divisible
+        if self.video_frame_rate in [25,30]:
+            image_step = self.video_frame_rate // 5
+        elif self.video_frame_rate in [24]:
+            image_step = self.video_frame_rate // 6
+        else:
+            raise ValueError('unsuitable video frame rate for propagation: %d' % image_step)
+        cmd = 'python ' + STM_folder + 'demo_youtop.py --image-template %s  --mask-folder %s --output-template %s --input-index "%s" --input-fps %d --image-step %d --stm-height 480 --shot-chunk-len 500\n'
+        cmd = cmd % (image_template, mask_folder, output_folder + 'seg_%05d.png', frame_index_str, self.video_frame_rate, image_step)
         if cmd_file is None:
             print(cmd)
         else:

@@ -24,9 +24,10 @@ if __name__ == "__main__":
     
     fn = 'data/video'
     fn = 'data/video_v1'
-    vopt=0;vv=['music_video']
     vopt=1;vv=['9bZkp7q19f0']
-    fn = 'data/video_v0';vv=[]
+    vopt=0;vv=['cooking']
+    
+    #fn = 'data/video_v0';vv=[]
 
     #vp.setInputVideoTxt('data/video_v0.txt')
     #video_v0 = vp.video_all_name
@@ -108,23 +109,21 @@ if __name__ == "__main__":
             if 'F4tHL8reNCs' in video_name:
                 vp.RefineSeg(iter_image = 30, iter_algo = 20)
         
-        # copy files: hp03 -> server
+        # copy files: hp03 -> middle/share
         elif opt == '2':
             # refinement for display 
             Di = vp.video_share_folder + 'overlays/'
             Do = vp.video_web_folder % 'seg_ds/'
             # shot boundary 
             #Di = vp.video_share_folder + 'seg_shot_bd/'
-            #Do = vp.video_web_folder % 'proofread/'
+            #Do = vp.video_web_folder % ''
 
-            vutil.mkdir(Do)
-            file_in = glob.glob(Di + '/*.png')
-            file_out = glob.glob(Do + '/*.png')
-            if len(file_in)>0 and len(file_out)!=len(file_in):
-                print('copy')
-                for ff in file_in:
-                    file_name = ff[ff.rfind('/')+1:]
-                    if not os.path.exists(Do+file_name):
-                        # avoid file permission change issue
-                        # e.g. the files can be in the Google Drive
-                        shutil.copyfile(ff, Do+file_name)
+            vutil.copyFolder(Di, Do)
+
+        # copy files: middle/share -> web
+        elif opt == '3':
+            # refinement for display 
+            Di = vp.video_share_folder + 'overlays/'
+            Do = vp.video_web_folder % ''
+
+            vutil.copyFolder(Di, Do)
