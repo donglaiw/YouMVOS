@@ -125,4 +125,6 @@ if __name__ == "__main__":
                 for ff in file_in:
                     file_name = ff[ff.rfind('/')+1:]
                     if not os.path.exists(Do+file_name):
+                        # avoid file permission change issue
+                        # e.g. the files can be in the Google Drive
                         shutil.copyfile(ff, Do+file_name)
