@@ -22,15 +22,23 @@ if __name__ == "__main__":
 
     fn = 'data/video'
     fn = 'data/video_v1'
+    vopt=1;vv=['9bZkp7q19f0']
+    vopt=0;vv=['music_video']
     #fn = 'data/video_v0'
+
     vp.setFolders(data_folder, web_folder, share_folder)
     vp.setInputVideoJson(fn + '.json')
 
     for vid,video_name in enumerate(vp.video_all_name[job_id::job_num]):
-        #if video_name[:video_name.rfind('/')] not in ['music_video']:
-        if video_name[video_name.rfind('/')+1:] not in ['9bZkp7q19f0']:
-            #pass
-            continue
+
+        if len(vv) > 0 :
+            if vopt == 0:
+                if video_name[:video_name.rfind('/')] not in vv:
+                    continue
+            elif vopt == 1:
+                if video_name[video_name.rfind('/')+1:] not in vv:
+                    continue
+
         print('process video: ', video_name)
         vp.setVideoInfo(video_name)
         # Set up the web proofreading for shot detection and classification
@@ -80,6 +88,8 @@ if __name__ == "__main__":
             index_type = 'cluster'
             if vp.video_genre in ['music_video']:
                 index_type = 'shot_all_list'
+            if vp.video_url in ['RB-RcX5DS5A','iS1g8G_njx8']:
+                continue
             vp.computeSTMSeg(lib_stm_folder, index_type = index_type, \
                                     output_folder = vp.video_share_folder + 'seg_prop/', \
                                     cmd_file = cmd_file)

@@ -31,8 +31,7 @@ function loadJs_cb(){
 loadJs('_cluster', loadJs_cb)
 
 
-function getImName(i){
-    var im_id = 1 + i;
+function getImName(im_id){
     var fn = frame_folder + video_name + "/image_" + printf5d(im_id) + '.png';
     return fn
 }
