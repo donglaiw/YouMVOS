@@ -26,6 +26,7 @@ if __name__ == "__main__":
     fn = 'data/video_v1'
     vopt=1;vv=['9bZkp7q19f0']
     vopt=0;vv=['cooking']
+    vopt=0;vv=['music_video']
     
     #fn = 'data/video_v0';vv=[]
 
@@ -115,9 +116,11 @@ if __name__ == "__main__":
             Di = vp.video_share_folder + 'overlays/'
             Do = vp.video_web_folder % 'seg_ds/'
             # shot boundary 
-            #Di = vp.video_share_folder + 'seg_shot_bd/'
-            #Do = vp.video_web_folder % ''
-
+            Di = vp.video_share_folder + 'seg_shot_bd/'
+            Do = (vp.video_web_folder %'') +'seg_shot_bd/'
+            
+            # for google drive need to refresh the filesystem
+            os.system('ls ' + Di)
             vutil.copyFolder(Di, Do)
 
         # copy files: middle/share -> web
