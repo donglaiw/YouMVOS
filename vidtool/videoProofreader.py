@@ -64,7 +64,7 @@ class videoProofreader(videoBasic):
             output = html_cluster % ('../../../frame_ds/', self.video_name, (self.video_frame_num + self.video_frame_rate - 1) // self.video_frame_rate)
             vutil.writetxt(output_html, output)
 
-    def webProofreadSeg(self, input_txt = None, output_folder = None, frame_rate = -1):
+    def webProofreadSeg(self, seg_prefix='refine_', input_txt = None, output_folder = None, frame_rate = -1):
         # Convert shot_txt into js and html
         if frame_rate < 0 :
             frame_rate = self.video_frame_rate
@@ -72,7 +72,7 @@ class videoProofreader(videoBasic):
         output_html = self.getHtml(output_folder, '_seg')
         if self.redo or not os.path.exists(output_html):
             print('do seg')
-            overlay_files = sorted(glob(output_html[:output_html.rfind('/')] + '/../../../seg_ds/'+self.video_name+'/*.png'))
+            overlay_files = sorted(glob(output_html[:output_html.rfind('/')] + '/../../../seg_ds/'+self.video_name+'/' + seg_prefix + '*.png'))
             overlay_id = ','.join([str(int(x[x.rfind('_')+1:-4])) for x in overlay_files]) 
             output = html_seg % ('../../../frame_ds/', '../../../seg_ds/', self.video_name, overlay_id, (self.video_frame_num + self.video_frame_rate - 1) // self.video_frame_rate, self.video_frame_rate)
             vutil.writetxt(output_html, output)

@@ -165,7 +165,7 @@ def convertClusterListToJs(shots):
     output_js += 'var shot_selection_str="0";'
     return output_js
 
-def copyFolder(input_folder, output_folder, file_ext='png'):
+def copyFolder(input_folder, output_folder, file_ext='png', name_replace=[]):
     mkdir(output_folder)
     file_in = glob.glob(input_folder + '/*.' + file_ext)
     file_out = glob.glob(output_folder + '/*.' + file_ext)
@@ -173,5 +173,8 @@ def copyFolder(input_folder, output_folder, file_ext='png'):
         print('copy')
         for ff in file_in:
             file_name = ff[ff.rfind('/')+1:]
-            if not os.path.exists(output_folder + file_name):
-                shutil.copyfile(ff, output_folder + file_name)
+            if len(name_replace) != 0:
+                file_name = file_name.replace(name_replace[0], name_replace[1])
+            file_name = output_folder + file_name
+            if not os.path.exists(file_name):
+                shutil.copyfile(ff, file_name)

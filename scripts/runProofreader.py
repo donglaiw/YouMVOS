@@ -26,8 +26,9 @@ if __name__ == "__main__":
     fn = 'data/video_v1'
     vopt=1;vv=['9bZkp7q19f0']
     vopt=0;vv=['cooking']
+    vopt=0;vv=['music_video']
     
-    #fn = 'data/video_v0';vv=[]
+    fn = 'data/video_v0';vv=[]
 
     #vp.setInputVideoTxt('data/video_v0.txt')
     #video_v0 = vp.video_all_name
@@ -57,8 +58,8 @@ if __name__ == "__main__":
             #vp.webProofreadFolder()
             vp.setRedo(True)
             #vp.webProofreadShot()
-            #vp.webProofreadSeg()
-            vp.webProofreadCluster()
+            vp.webProofreadSeg()
+            #vp.webProofreadCluster()
         elif opt == '0.2':
             # Copy final js result: web -> data
             js_in = vp.getShotJs()
@@ -115,15 +116,27 @@ if __name__ == "__main__":
             Di = vp.video_share_folder + 'overlays/'
             Do = vp.video_web_folder % 'seg_ds/'
             # shot boundary 
-            #Di = vp.video_share_folder + 'seg_shot_bd/'
-            #Do = vp.video_web_folder % ''
+            Di = vp.video_share_folder + 'seg_shot_bd/'
+            Do = vp.video_web_folder % ''
 
-            vutil.copyFolder(Di, Do)
+            #vutil.copyFolder(Di, Do)
+        # check files: middle/share
+        elif opt == '2.1':
+            # refinement for display 
+            Di = vp.video_share_folder + 'overlays/'
+            # shot boundary 
+            Di = vp.video_share_folder + 'seg_shot_bd/'
+            if not os.path.exists(Di):
+                print('No',Di)
+            else:
+                ll = len(glob.glob(Di + '/*.png'))
+                if ll == 0:
+                    print(Di, ll)
 
-        # copy files: middle/share -> web
+        # on web server: copy files: middle/share -> web
         elif opt == '3':
             # refinement for display 
             Di = vp.video_share_folder + 'overlays/'
             Do = vp.video_web_folder % ''
 
-            vutil.copyFolder(Di, Do)
+            vutil.copyFolder(Di, Do, name_replace=['overlay_', 'refine_'])
