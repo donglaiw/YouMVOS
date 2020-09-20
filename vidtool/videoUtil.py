@@ -3,6 +3,7 @@ import glob
 import subprocess
 import json
 from scipy.ndimage import zoom
+from skimage.color import label2rgb, rgb2gray
 import imageio
 import numpy as np
 
@@ -14,7 +15,6 @@ GENRE['history'] = 'education'
 GENRE['vlog'] = 'skit-show'
 GENRE['comedy'] = 'skit-show'
 GENRE['interview'] = 'skit-show'
-
 
 def getVideoInfo(video_url):
     output_file = 'db/tmp.info'
@@ -165,16 +165,43 @@ def convertClusterListToJs(shots):
     output_js += 'var shot_selection_str="0";'
     return output_js
 
-def copyFolder(input_folder, output_folder, file_ext='png', name_replace=[]):
+def copyFolder(input_folder, output_folder, file_ext='png', name_replace=[], frame_downsample=1):
     mkdir(output_folder)
-    file_in = glob.glob(input_folder + '/*.' + file_ext)
-    file_out = glob.glob(output_folder + '/*.' + file_ext)
-    if len(file_in)>0 and len(file_out)!=len(file_in):
+    files_in = glob.glob(input_folder + '/*.' + file_ext)
+    files_out = glob.glob(output_folder + '/*.' + file_ext)
+    if len(files_in)>0 and len(files_out)!=len(files_in):
         print('copy')
-        for ff in file_in:
-            file_name = ff[ff.rfind('/')+1:]
+        for file_in in files_in:
+            file_out = file_in[file_in.rfind('/')+1:]
             if len(name_replace) != 0:
-                file_name = file_name.replace(name_replace[0], name_replace[1])
-            file_name = output_folder + file_name
-            if not os.path.exists(file_name):
-                shutil.copyfile(ff, file_name)
+                file_out = file_out.replace(name_replace[0], name_replace[1])
+            file_out = output_folder + file_out
+            if not os.path.exists(file_out):
+                if frame_downsample == 1:
+                    shutil.copyfile(file_in, file_out)
+                else:
+                    output = imageio.imread(file_in)[::frame_downsample, ::frame_downsample]
+                    imageio.imwrite(file_out, output)
+
+def visSeg(im, seg, option=0):
+    alpha = 0.7
+    if seg.ndim == 3:
+        seg = seg[:,:,2]
+    if option == 0: # gray image
+        # to keep the color label consistent
+        # make sure all indices are present
+        # hack the first elements 
+        seg_mid = seg.max()
+        prev_val = seg[0,:seg_mid].copy()
+        seg[0,:seg_mid] = range(seg_mid) 
+        seg_color = label2rgb(seg, bg_label=0)
+        seg_color[0,:seg_mid] = seg_color[0,prev_val]
+        im_gray = rgb2gray(im)[:,:,None]
+        output = (255*(alpha * im_gray + (1 - alpha) * seg_color)).astype(np.uint8)
+        return output 
+    elif option == 1: # original image
+        out = im.copy()
+        seg_colored = 255.*label2rgb(seg, colors = COLOR64)
+        seg_mask = np.tile(seg[:, :, None]>0, [1,1,3])
+        out[seg_mask] = (im[seg_mask].astype(float) * frame_alpha + seg_colored[seg_mask] * (1 - frame_alpha)).astype(np.uint8)
+        return out

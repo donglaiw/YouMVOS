@@ -58,7 +58,7 @@ class videoBasic(object):
 
         self.video_data_folder = self.data_folder + '/' + self.video_name + '/'
         self.video_web_folder = self.web_folder + '/%s/' + self.video_name + '/'
-        self.video_share_folder = self.share_folder + '/' + self.video_name + '/'
+        self.video_share_folder = self.share_folder + '/%s/' + self.video_name + '/'
 
     ####
     # 1. I/O for all frames
@@ -148,7 +148,8 @@ class videoBasic(object):
                     # All frames in selected shots
                     frame_id = []
                     for shot_id in np.where(shot_selection == 0)[0]:
-                        frame_id += keyframes[range(shots[shot_id, 0], shots[shot_id, 1]+1)]
+                        frame_id += list(keyframes[range(shots[shot_id, 0], shots[shot_id, 1]+1)])
+                    frame_id = np.array(frame_id)
                 elif option == 'shot_all_list': 
                     # All frames in selected shots
                     frame_id = [None] * (shot_selection == 0).sum()
@@ -217,6 +218,7 @@ class videoBasic(object):
                 shots = frame_ids[shots]
                 
         shot_selection = np.array([int(x) for x in shot_info[shot_info.rfind('=')+2:shot_info.rfind('"')].split(',')]) 
+
         return shots, shot_selection
 
     def convertShotArrToJs(self, shots, frame_rate = -1):
@@ -301,40 +303,26 @@ class videoBasic(object):
                     seg = imageio.imread(result_files[seg_id])[::frame_downsample, ::frame_downsample]
                     if seg.ndim == 3:
                         seg = seg[:,:,2]
-                    # label2rgb(seg, image = im) option converts the image into gray
-                    seg_colored = 255.*label2rgb(seg)
-                    seg_mask = np.tile(seg[:, :, None]>0, [1,1,3])
-                    im[seg_mask] = (im[seg_mask].astype(float) * frame_alpha + seg_colored[seg_mask] * (1 - frame_alpha)).astype(np.uint8)
+                    im = vutil.visSeg(im, seg)
                 output[i] = im
             writegif(output_file, output, duration = frame_duration)
 
-    def visualizeSegPng(self, image_template=None, mask_template=None, output_template=None, frame_index=None, frame_downsample = 4):
+    def visualizeSegPng(self, image_template=None, mask_template=None, output_template=None, output_prefix='refine_', frame_index=None, frame_downsample = 4):
         if image_template is None:
             image_template = (self.video_web_folder % 'frame_ds/') + 'image_%05d.png'
         if mask_template is None:
-            mask_template = self.video_share_folder + 'seg_%05d.png'
+            mask_template = (self.video_share_folder % '') + 'seg_prop/seg_%05d.png'
         if output_template is None:
-            pass
+            output_template = (self.video_web_folder % 'seg_ds/') + output_prefix + '%05d.png'
 
-        result_frame_id = np.loadtxt(self.output_folder+'result/fid.txt').astype(int)
-        result_files = sorted(glob(self.output_folder+'result/*.png'))
-        assert len(result_frame_id) == len(result_files)
-    
-        frame_ids = np.arange(0, self.frame_num, self.fps)
-        frame_size = np.array(self.getFrame(0).shape)
-        frame_size[:2] = (frame_size[:2] + frame_downsample - 1) // frame_downsample
-        output = np.zeros([len(frame_ids)] + list(frame_size), np.uint8)
-
-        for i, frame_id in enumerate(frame_ids):
-            im = self.getFrame(frame_id)[::frame_downsample, ::frame_downsample]
-            if frame_id in result_frame_id:
-                seg_id = int(np.where(result_frame_id==frame_id)[0])
-                seg = imageio.imread(result_files[seg_id])[::frame_downsample, ::frame_downsample]
-                if seg.ndim == 3:
-                    seg = seg[:,:,2]
-                # label2rgb(seg, image = im) option converts the image into gray
-                seg_colored = 255.*label2rgb(seg)
-                seg_mask = np.tile(seg[:, :, None]>0, [1,1,3])
-                im[seg_mask] = (im[seg_mask].astype(float) * frame_alpha + seg_colored[seg_mask] * (1 - frame_alpha)).astype(np.uint8)
-            output[i] = im
-        writegif(output_file, output, duration = frame_duration)
+        if isinstance(frame_index, str):
+            if frame_index == 'shot_all':
+                frame_index = self.getKeyframeIndex(frame_index)
+        vutil.mkdir(output_template, 1)
+        for frame_id in frame_index:
+            output_name = output_template % (frame_id+1)
+            mask_name = mask_template % (frame_id + 1)
+            if os.path.exists(mask_name) and (self.redo or not os.path.exists(output_name)):
+                im = self.getFrame(frame_id)[::frame_downsample, ::frame_downsample]
+                seg = imageio.imread(mask_name)[::frame_downsample, ::frame_downsample]
+                imageio.imwrite(output_name, vutil.visSeg(im, seg))

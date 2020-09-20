@@ -48,7 +48,7 @@ class videoProofreader(videoBasic):
             frame_rate = self.video_frame_rate
 
         output_js = self.getJs(output_folder, '_cluster')
-        if self.redo or not os.path.exists(output_js):
+        if False:#self.redo or not os.path.exists(output_js):
             print('do js')
             input_file = self.getTxt(input_txt, 'cluster')
             if os.path.exists(input_file):
@@ -72,9 +72,15 @@ class videoProofreader(videoBasic):
         output_html = self.getHtml(output_folder, '_seg')
         if self.redo or not os.path.exists(output_html):
             print('do seg')
-            overlay_files = sorted(glob(output_html[:output_html.rfind('/')] + '/../../../seg_ds/'+self.video_name+'/' + seg_prefix + '*.png'))
-            overlay_id = ','.join([str(int(x[x.rfind('_')+1:-4])) for x in overlay_files]) 
-            output = html_seg % ('../../../frame_ds/', '../../../seg_ds/', self.video_name, overlay_id, (self.video_frame_num + self.video_frame_rate - 1) // self.video_frame_rate, self.video_frame_rate)
+            if input_txt is None: # load what is available
+                overlay_files = sorted(glob(output_html[:output_html.rfind('/')] + '/../../../seg_ds/'+self.video_name+'/' + seg_prefix + '*.png'))
+                overlay_id = ','.join([str(int(x[x.rfind('_')+1:-4])) for x in overlay_files]) 
+            elif '.txt' not in input_txt:
+                # load shot result
+                overlay_id = ','.join([str(x) for x in self.getKeyframeIndex(input_txt, frame_offset = 1)])
+            else:
+                overlay_id = vutil.readtxt(input_txt)[:-1]
+            output = html_seg % ('../../../frame_ds/', '../../../seg_ds/', seg_prefix, self.video_name, overlay_id, (self.video_frame_num + self.video_frame_rate - 1) // self.video_frame_rate, self.video_frame_rate)
             vutil.writetxt(output_html, output)
 
     def vastProofreadSeg(self, frame_index = 0, frame_suf=None, shot_js = None, output_folder = None):
@@ -127,4 +133,3 @@ class videoProofreader(videoBasic):
                 seg_out = vutil.segRefineGrabcut(im, seg, iter_image, iter_algo)
                 if seg_out is not None:
                     imageio.imwrite(output_name, seg_out)
-            

@@ -52,7 +52,7 @@ function update_display(){
             if (j %% numCol == 0){
                 out += '<tr><td>'
             }
-            out+='<img height=100 src="'+getImName(shot_index[i][j])+'">'
+            out += shot_index[i][j] + '<br/><img height=100 src="'+getImName(shot_index[i][j])+'">'
             if ((j + 1) %% numCol == 0){
                 out +='</td></tr>'
             }
