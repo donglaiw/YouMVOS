@@ -1,120 +1,149 @@
-from scipy.ndimage.morphology import binary_erosion, binary_dilation
+import numpy as np
 import cv2
+import matplotlib.pyplot as plt
+from pathlib import Path
+from skimage.color import label2rgb
+from scipy.ndimage.morphology import binary_erosion, binary_dilation, distance_transform_edt
+from random import randrange
+import re
 
-class SegRefinement(object):
-    def __init__(self):
-    
-    
-    def setGrabCut(self, erode_ratio=0.9, iter_seg = [2, 20], iter_algo = 5,\
-                    alpha_fade=1):
-        self.gc_erode_ratio = erode_ratio
-        self.gc_iter_seg = iter_seg
-        self.gc_iter_algo = iter_algo
-        self.gc_alpha_fade = alpha_fade
+class RefinementModule:
 
-    def erodeForeground(self, seg_fg, gc_iter_seg = [2,20], erode_rate = 0.9):
-        seg_fg = binary_erosion(seg_fg, iterations = gc_iter_seg[0])
-        instance_pixs = float(seg_fg.sum())
-        for i in range(gc_iter_seg[0] + 1, gc_iter_seg[1]):
-              seg_fg = binary_erosion(seg_fg)
-              if seg_fg.sum()/instance_pixs < erode_ratio: break
-        return seg_fg
+  def __init__(self, image_list, seg_list, colors = None, alpha_fade = 1, alpha_trans = 0.7, erode_ratio = 0.9):
+    self.images = sorted(image_list)
+    self.masks = sorted(seg_list)
+    self.clr = np.array(['black', 'blue', 'yellow', 'darkorange', 'magenta', 'cyan', 'yellowgreen', 'red', 'pink', 'indigo', 'green']) if colors == None else colors
+    self.alpha_fade = alpha_fade
+    self.alpha_trans = alpha_trans
+    self.erode_ratio = erode_ratio
+    self.pat = re.compile(r'[\d]+')
 
-    def fadeBackground(self, img, back, alpha = 0.6):
-        if alpha == 1:
-            return img
-        neg_gray = np.where(back == 0, 1., 0.)
-        pos_gray = 1 - neg_gray
-        nm = img * neg_gray[:, :, None]
-        m = img * pos_gray[:,:, None]
-        imx = np.uint8(m + nm*alpha)
-        return imx
+  def segRefineGrabcut(self, im, seg, iter_algo = 5):
+    sz = im.shape
+    seg_new = np.zeros(sz[:2], np.uint8)
 
-    def refineGrabcut(im, seg): 
-        seg_new = None
-        if seg.max() > 0:
-            sz = im.shape
-            uid = np.unique(seg)
-            uid = uid[uid>0]
-            bgdModel = np.zeros((1,65),np.float64)
-            fgdModel = np.zeros((1,65),np.float64)
-            mask = np.zeros(sz[:2], np.uint8)
-            seg_new = np.zeros(sz[:2], seg.dtype)
-            for i in uid:
-                mask[:] = 0
-                
-                # foreground 1: erode mask until 90%
-                mask_fg = self.erodeForeground(seg == i, self.gc_iter_seg, self.gc_erode_ratio)
-                mask[mask_fg] = 1
-                
-                imx = self.fadeBackgrnd(im, mask, self.gc_alpha_fade)
+    if seg.max() > 0:    
+        uid = np.unique(seg)
+        uid = uid[uid>0]
+        bgdModel = np.zeros((1,65),np.float64)
+        fgdModel = np.zeros((1,65),np.float64)
+        mask = np.zeros(sz[:2], np.uint8)
 
-                # maybe foreground 3: dilate fg by gc_iter_image[0]
-                mask_in = binary_dilation(mask == 1, iterations = self.gc_iter_seg[0])
-                mask[(mask_in > 0) * (mask == 0)] = 3
+        for i in uid:
+            mask[:] = 0
+            mask_in = binary_erosion(seg == i, iterations = 2)
+            eroded_mask = mask_in
+            iter_image = 2
+            instance_pixs = np.sum(seg == i)
 
-                # maybe background 2: dilate orig mask by gc_iter_image[0]
-                mask_dilation = binary_dilation(seg == i, iterations = self.gc_iter_seg[0])
-                mask[(mask_dilation > 0) * (mask == 0)] = 2
+            for iter in range(3, 20):
+              mask_in = binary_erosion(mask_in == i)
+              if np.sum(mask_in)/instance_pixs < self.erode_ratio: break
+              iter_image = iter
+              eroded_mask = mask_in
 
+            mask[eroded_mask > 0] = 1
 
-                out, bgdModel, fgdModel = cv2.grabCut(im, mask, None, bgdModel, fgdModel, iter_algo, cv2.GC_INIT_WITH_MASK)
-                out2 = np.where((out == cv2.GC_BGD) | (out == cv2.GC_PR_BGD), 0, 1)
-                seg_new[out2 > 0] = i
-        return seg_new
+            if self.alpha_fade != 1: imx = fade_backgrnd(im, mask, self.alpha_fade)
+            # mask_in = binary_dilation(seg == i, iterations = iter_image//2)
+            mask_in = binary_dilation(mask == 1, iterations = iter_image)
+            mask[(mask_in > 0) * (mask == 0)] = 3
+            dist = distance_transform_edt(seg != i)
+            mask[(dist < iter_image) * (mask == 0)] = 2
+            
+            try:
+              out, bgdModel, fgdModel = cv2.grabCut(im, mask, None, bgdModel, fgdModel, iter_algo, cv2.GC_INIT_WITH_MASK)
+              out2 = np.where((out == cv2.GC_BGD) | (out == cv2.GC_PR_BGD), 0, 1)
+              seg_new[out2 > 0] = i
+            
+            except: 
+              continue
 
-    def convertClusterStrToClusterList(cluster_str):
-        if cluster_str[-1] == ';':
-            cluster_str = cluster_str[:-1]
-        cluster_list = [[int(y) for y in x.split(',')] for x in cluster_str.split(';')]
-        return cluster_list
+    return seg_new
 
-    def convertClusterListToStr(shots):
-        return ';'.join([','.join([str(y) for y in shots[x]]) for x in range(len(shots))]) 
+  def fade_backgrnd(self, img, back, alpha = 0.6):
+    neg_gray = np.where(back == 0, 1., 0.)
+    pos_gray = 1 - neg_gray
 
-    def convertClusterListToJs(shots):
-        cluster_str = convertClusterListToStr(shots)
-        output_js = 'var shot_index_str="' + cluster_str + '";'
-        output_js += 'var shot_selection_str="0";'
-        return output_js
+    nm = img * neg_gray[:, :, np.newaxis]
+    m = img * pos_gray[:,:, np.newaxis]
+    imx = np.uint8(m + nm*alpha)
+    return imx
 
-    def copyFolder(input_folder, output_folder, file_ext='png', name_replace=[], frame_downsample=1):
-        mkdir(output_folder)
-        files_in = glob.glob(input_folder + '/*.' + file_ext)
-        files_out = glob.glob(output_folder + '/*.' + file_ext)
-        if len(files_in)>0 and len(files_out)!=len(files_in):
-            print('copy')
-            for file_in in files_in:
-                file_out = file_in[file_in.rfind('/')+1:]
-                if len(name_replace) != 0:
-                    file_out = file_out.replace(name_replace[0], name_replace[1])
-                file_out = output_folder + file_out
-                if not os.path.exists(file_out):
-                    if frame_downsample == 1:
-                        shutil.copyfile(file_in, file_out)
-                    else:
-                        output = imageio.imread(file_in)[::frame_downsample, ::frame_downsample]
-                        imageio.imwrite(file_out, output)
+  def overlay_mask(self, img, seg, color = 0):
+    uid = np.unique(seg)
+    ovrl_gray = 255.*label2rgb(seg, img, self.clr[uid[uid > 0]], bg_label = 0)
+    if not color: return np.uint8(ovrl_gray)
 
-    def visSeg(im, seg, option=0):
-        alpha = 0.7
-        if seg.ndim == 3:
-            seg = seg[:,:,2]
-        if option == 0: # gray image
-            # to keep the color label consistent
-            # make sure all indices are present
-            # hack the first elements 
-            seg_mid = seg.max()
-            prev_val = seg[0,:seg_mid].copy()
-            seg[0,:seg_mid] = range(seg_mid) 
-            seg_color = label2rgb(seg, bg_label=0)
-            seg_color[0,:seg_mid] = seg_color[0,prev_val]
-            im_gray = rgb2gray(im)[:,:,None]
-            output = (255*(alpha * im_gray + (1 - alpha) * seg_color)).astype(np.uint8)
-            return output 
-        elif option == 1: # original image
-            out = im.copy()
-            seg_colored = 255.*label2rgb(seg, colors = COLOR64)
-            seg_mask = np.tile(seg[:, :, None]>0, [1,1,3])
-            out[seg_mask] = (im[seg_mask].astype(float) * frame_alpha + seg_colored[seg_mask] * (1 - frame_alpha)).astype(np.uint8)
-            return out
+    seg_mask = np.tile(seg[:, :, None] > 0, [1,1,3])
+    seg_neg = np.tile(seg[:, :, None] == 0, [1,1,3])
+    imx = np.zeros(img.shape)
+    imx[seg_mask] = ovrl_gray[seg_mask]
+    imx[seg_neg] = img[seg_neg]
+    return np.uint8(imx)
+
+  def vis_results(self, img, seg):
+    figs, axs = plt.subplots(1, 3, figsize=(25,15))
+    ovrl_gray = self.overlay_mask(img, seg)
+    ovrl_rgb = self.overlay_mask(img, seg, 1)
+    axs[0].imshow(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
+    axs[1].imshow(cv2.cvtColor(ovrl_gray, cv2.COLOR_BGR2RGB))
+    axs[2].imshow(cv2.cvtColor(ovrl_rgb, cv2.COLOR_BGR2RGB))
+
+  def vis_compare(self, im, seg, ref_seg):
+    vis_ref = np.uint8(np.where(ref_seg > 0, 1, 0))
+    vis_seg = np.uint8(np.where(seg > 0, 1, 0))
+    out_img = im*vis_ref[:,:,np.newaxis]
+    pre_img = im*vis_seg[:,:,np.newaxis]
+    imx = self.fade_backgrnd(im, seg)
+    imrx = self.fade_backgrnd(im, ref_seg)
+
+    figs, axs = plt.subplots(3, 2, figsize=(25,15))
+    axs[0, 0].imshow(seg)
+    axs[0, 1].imshow(ref_seg)
+    axs[1, 0].imshow(cv2.cvtColor(pre_img, cv2.COLOR_BGR2RGB))
+    axs[1, 1].imshow(cv2.cvtColor(out_img, cv2.COLOR_BGR2RGB))
+    axs[2, 0].imshow(cv2.cvtColor(imx, cv2.COLOR_BGR2RGB))
+    axs[2, 1].imshow(cv2.cvtColor(imrx, cv2.COLOR_BGR2RGB))
+
+  def show_input(self):
+    index = randrange(0, len(self.masks))
+    n_seg = self.pat.search(self.masks[index]).group()
+    im = cv2.imread(self.images[int(n_seg)])
+    gray = cv2.imread(self.masks[index], 0)
+    figs, axs = plt.subplots(1, 2, figsize=(25,15))
+    axs[0].imshow(cv2.cvtColor(im, cv2.COLOR_BGR2RGB))
+    axs[1].imshow(gray)
+
+  def save_results(self, img, seg, n_seg, n_img, ovl = 1, mask = 1):
+    if mask: cv2.imwrite('refined_seg/refined_' + n_seg.zfill(5) + '.png', seg)
+    if ovl:  
+      h, w, _ = img.shape
+      overlay = self.overlay_mask(img, seg)
+      overlay = cv2.resize(overlay, (w//2, h//2), cv2.INTER_AREA)
+      cv2.imwrite('overlays/overlay_' + n_img.zfill(5) + '.png', overlay)
+
+  def refine(self, index, vis = 0):
+    n_seg = self.pat.search(self.masks[index]).group()
+    im = cv2.imread(self.images[int(n_seg)])
+    gray = cv2.imread(self.masks[index], 0)
+    gc_out = self.segRefineGrabcut(im, gray, 5)
+    if vis: self.vis_results(im, gc_out)
+    else: return gc_out
+
+  def compare_result(self, index):
+    n_seg = self.pat.search(self.masks[index]).group()
+    im = cv2.imread(self.images[int(n_seg)])
+    gray = cv2.imread(self.masks[index], 0)
+    gc_out = self.segRefineGrabcut(im, gray, 5)
+    self.vis_compare(im, gray, gc_out)
+
+  def refine_all(self):
+    self.mapping = {0 : 0}
+    for i in range(len(self.masks)):
+      n_seg = self.pat.search(self.masks[i]).group()
+      n_img = self.pat.search(self.images[int(n_seg)]).group()
+      im = cv2.imread(self.images[int(n_seg)])
+      gray = cv2.imread(self.masks[i], 0)
+      gc_out = self.segRefineGrabcut(im, gray, 5)
+      self.save_results(im, gc_out, n_seg, n_img)

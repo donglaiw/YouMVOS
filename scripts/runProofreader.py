@@ -109,21 +109,26 @@ if __name__ == "__main__":
             if 'F4tHL8reNCs' in video_name:
                 vp.RefineSeg(iter_image = 30, iter_algo = 20)
         
-        # copy files: hp03 -> middle/share
+        # on hp03: copy files: hp03 -> middle/share
         elif opt == '2':
+            name_replace = []
             # refinement for display 
             Di = vp.video_share_folder + 'overlays/'
             Do = vp.video_web_folder % 'seg_ds/'
+            name_replace = ['overlay_', 'refine_']
 
-            Di = vp.video_share_folder + 'refined_seg/'
+            Di = (vp.video_share_folder % '') + 'refined_seg/'
             Do = (vp.video_web_folder % '') + 'refined_seg/'
+            name_replace = []
             """
             # shot boundary 
             Di = vp.video_share_folder + 'seg_shot_bd/'
-            Do = vp.video_web_folder % ''
+            Do = (vp.video_web_folder %'') +'seg_shot_bd/'
             """
-
-            vutil.copyFolder(Di, Do)
+            
+            # for google drive need to refresh the filesystem
+            os.system('ls ' + Di)
+            vutil.copyFolder(Di, Do, name_replace=name_replace)
         # check files: middle/share
         elif opt == '2.1':
             # refinement for display 
@@ -136,10 +141,22 @@ if __name__ == "__main__":
                 ll = len(glob.glob(Di + '/*.png'))
                 if ll == 0:
                     print(Di, ll)
-
         # on web server: copy files: middle/share -> web
         elif opt == '3':
             # refinement for display 
             Di = vp.video_share_folder % 'seg_ds'
             Do = vp.video_web_folder % 'seg_ds'
             vutil.copyFolder(Di, Do, frame_downsample=2)
+        elif opt == '3.1':
+            # refinement for display 
+            Di = (vp.video_share_folder % '') + 'refined_seg/'
+            Do = vp.video_data_folder + 'refined_seg/'
+            vutil.copyFolder(Di, Do)
+        elif opt == '3.2':
+            # rename names
+            Do = vp.video_data_folder + 'refined_seg/'
+            fns = sorted(glob.glob(Do + '*.png'))[::-1]
+            for fn in fns:
+                num = int(fn[fn.rfind('_')+1:-4])
+                fn_new = fn[:fn.rfind('_')+1]+('%05d'%(1+num*vp.video_frame_rate))+fn[-4:]
+                shutil.move(fn, fn_new)

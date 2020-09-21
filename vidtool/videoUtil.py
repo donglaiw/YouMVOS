@@ -6,6 +6,7 @@ from scipy.ndimage import zoom
 from skimage.color import label2rgb, rgb2gray
 import imageio
 import numpy as np
+import shutil
 
 GENRE = {}
 GENRE['animation'] = 'kid-animation'
@@ -141,3 +142,34 @@ def visSeg(im, seg, option=0):
         seg_mask = np.tile(seg[:, :, None]>0, [1,1,3])
         out[seg_mask] = (im[seg_mask].astype(float) * frame_alpha + seg_colored[seg_mask] * (1 - frame_alpha)).astype(np.uint8)
         return out
+
+def convertClusterStrToClusterList(cluster_str):
+    if cluster_str[-1] == ';':
+        cluster_str = cluster_str[:-1]
+    cluster_list = [[int(y) for y in x.split(',')] for x in cluster_str.split(';')]
+    return cluster_list
+
+
+def convertClusterListToStr(shots):
+    return ';'.join([','.join([str(y) for y in shots[x]]) for x in range(len(shots))]) 
+
+def convertClusterListToJs(shots):
+    cluster_str = convertClusterListToStr(shots)
+    output_js = 'var shot_index_str="' + cluster_str + '";'
+    output_js += 'var shot_selection_str="0";'
+    return output_js
+
+def copyFolder(input_folder, output_folder, file_ext='png', name_replace=[]):
+    mkdir(output_folder)
+    file_in = glob.glob(input_folder + '/*.' + file_ext)
+    file_out = glob.glob(output_folder + '/*.' + file_ext)
+    if len(file_in) == 0:
+        print('no copy',input_folder,len(file_out),len(file_in))
+    if len(file_in)>0 and len(file_out)!=len(file_in):
+        for ff in file_in:
+            file_name = ff[ff.rfind('/')+1:]
+            if len(name_replace) != 0:
+                file_name = file_name.replace(name_replace[0], name_replace[1])
+            file_name = output_folder + file_name
+            if not os.path.exists(file_name):
+                shutil.copyfile(ff, file_name)
