@@ -4,7 +4,7 @@ import numpy as np
 from glob import glob
 import imageio
 
-from .views import *
+from .view import *
 
 from .videoBasic import videoBasic
 from . import videoUtil as vutil

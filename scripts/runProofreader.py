@@ -26,10 +26,10 @@ if __name__ == "__main__":
     fn = 'data/video_v1'
     vopt=1;vv=['9bZkp7q19f0']
     vopt=0;vv=['cooking']
-    vopt=0;vv=['music_video']
-    vv=[]
+    #vopt=0;vv=['music_video']
+    #vv=[]
     
-    #fn = 'data/video_v0';vv=[]
+    fn = 'data/video_v0';vv=[]
 
     #vp.setInputVideoTxt('data/video_v0.txt')
     #video_v0 = vp.video_all_name
