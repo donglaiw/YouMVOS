@@ -237,7 +237,7 @@ class videoBasic(object):
 
     ####
     # 3. visualization
-    def visualizeClip(self, frame_folder = None, output_file = None, frame_stride = 1, frame_num = -1, frame_duration = 0.2):
+    def visualizeClipGif(self, frame_folder = None, output_file = None, frame_stride = 1, frame_num = -1, frame_duration = 0.2):
         if frame_folder is None:
             frame_folder = self.getFrameName(-2, suffix = '_ds')
         if output_file is None:
@@ -261,7 +261,7 @@ class videoBasic(object):
             vutil.writegif(output_file, output, duration = frame_duration)
 
 
-    def visualizeShot(self, frame_downsample = 4, num_gif_frame = 5, frame_duration = 0.2):
+    def visualizeShotGif(self, frame_downsample = 4, num_gif_frame = 5, frame_duration = 0.2):
         output_folder = self.export_folder+'shot/'
         if self.job_id == 0: # avoid multiple thread conflicts
             U_mkdir(output_folder)
@@ -281,7 +281,7 @@ class videoBasic(object):
                     output[j] = self.getFrame(ll[j])[::frame_downsample, ::frame_downsample]
                 writegif(output_file, output, duration = frame_duration)
 
-    def visualizeSeg(self, frame_downsample = 4, frame_duration = 0.2, frame_alpha = 0.7):
+    def visualizeSegGif(self, frame_downsample = 4, frame_duration = 0.2, frame_alpha = 0.7):
         output_file = self.output_folder+'%s_o.gif' % (self.video_name)
 
         if not os.path.exists(output_file):
@@ -307,3 +307,34 @@ class videoBasic(object):
                     im[seg_mask] = (im[seg_mask].astype(float) * frame_alpha + seg_colored[seg_mask] * (1 - frame_alpha)).astype(np.uint8)
                 output[i] = im
             writegif(output_file, output, duration = frame_duration)
+
+    def visualizeSegPng(self, image_template=None, mask_template=None, output_template=None, frame_index=None, frame_downsample = 4):
+        if image_template is None:
+            image_template = (self.video_web_folder % 'frame_ds/') + 'image_%05d.png'
+        if mask_template is None:
+            mask_template = self.video_share_folder + 'seg_%05d.png'
+        if output_template is None:
+            pass
+
+        result_frame_id = np.loadtxt(self.output_folder+'result/fid.txt').astype(int)
+        result_files = sorted(glob(self.output_folder+'result/*.png'))
+        assert len(result_frame_id) == len(result_files)
+    
+        frame_ids = np.arange(0, self.frame_num, self.fps)
+        frame_size = np.array(self.getFrame(0).shape)
+        frame_size[:2] = (frame_size[:2] + frame_downsample - 1) // frame_downsample
+        output = np.zeros([len(frame_ids)] + list(frame_size), np.uint8)
+
+        for i, frame_id in enumerate(frame_ids):
+            im = self.getFrame(frame_id)[::frame_downsample, ::frame_downsample]
+            if frame_id in result_frame_id:
+                seg_id = int(np.where(result_frame_id==frame_id)[0])
+                seg = imageio.imread(result_files[seg_id])[::frame_downsample, ::frame_downsample]
+                if seg.ndim == 3:
+                    seg = seg[:,:,2]
+                # label2rgb(seg, image = im) option converts the image into gray
+                seg_colored = 255.*label2rgb(seg)
+                seg_mask = np.tile(seg[:, :, None]>0, [1,1,3])
+                im[seg_mask] = (im[seg_mask].astype(float) * frame_alpha + seg_colored[seg_mask] * (1 - frame_alpha)).astype(np.uint8)
+            output[i] = im
+        writegif(output_file, output, duration = frame_duration)

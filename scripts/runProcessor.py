@@ -45,7 +45,7 @@ if __name__ == "__main__":
         if opt == '0':
             vp.setSingleProcess()
             vp.processDownsample()
-            vp.visualizeClip(frame_num = 20)
+            vp.visualizeClipGif(frame_num = 20)
         elif opt == '0.1': # generate js param for visualization file
             if vid == 0:
                 vutil.VideoTxtToJs(fn + '.txt', web_folder + 'js/%s.js' % fn[fn.rfind('/')+1:])
@@ -83,16 +83,15 @@ if __name__ == "__main__":
             if vid == 0:
                 vutil.writetxt(cmd_file, ['#/bin/bash'])
             # for movie_tralier, compute for all
-            frame_index = 1 # keyframes only
-            frame_index = 0 # all frames
             index_type = 'cluster'
             if vp.video_genre in ['music_video']:
                 index_type = 'shot_all_list'
-            if vp.video_url in ['RB-RcX5DS5A','iS1g8G_njx8']:
+            if vp.video_url in ['RB-RcX5DS5A','iS1g8G_njx8','RBumgq5yVrA']:
                 continue
             vp.computeSTMSeg(lib_stm_folder, index_type = index_type, \
                                     output_folder = vp.video_share_folder + 'seg_prop/', \
                                     cmd_file = cmd_file)
+        elif opt == '2.1': # compute display
 
         elif opt == '9':
             f0 = vp.video_name[:vp.video_name.find('/')]
