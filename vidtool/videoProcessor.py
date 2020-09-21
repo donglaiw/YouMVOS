@@ -158,7 +158,7 @@ class videoProcessor(videoBasic):
     # 3. STM for video object segmentation
     def computeSTMSeg(self, STM_folder, index_type = 'shot_all_list', index_file = None, frame_index = None, \
                              image_template = None, mask_folder = None, output_folder = None, \
-                             cmd_file = None):
+                             cmd_file = None, redo = 0):
         # https://github.com/donglaiw/STM
         # frame_index: list of arrays (cluster result) or Nx2 matrix (shot result)  
 
@@ -175,13 +175,13 @@ class videoProcessor(videoBasic):
         if image_template is None:
             image_template = self.getFrameName(-1)
         if mask_folder is None:
-            mask_folder =  self.video_share_folder + 'seg_shot_bd/'
+            mask_folder =  self.video_share_folder % '' + 'seg_shot_bd/'
         masks = glob(mask_folder + '/*.png')
         if len(masks) == 0:
             print("%s has no mask to run." % mask_folder)
             return
         if output_folder is None:
-            output_folder =  self.video_share_folder + 'seg_prop/'
+            output_folder =  self.video_share_folder % '' + 'seg_prop/'
         vutil.mkdir(output_folder)
         # sample rate: need to be divisible
         if self.video_frame_rate in [25,30]:
@@ -190,10 +190,32 @@ class videoProcessor(videoBasic):
             image_step = self.video_frame_rate // 6
         else:
             raise ValueError('unsuitable video frame rate for propagation: %d' % image_step)
-        cmd = 'python ' + STM_folder + 'demo_youtop.py --image-template %s  --mask-folder %s --output-template %s --input-index "%s" --input-fps %d --image-step %d --stm-height 480 --shot-chunk-len 500\n'
-        cmd = cmd % (image_template, mask_folder, output_folder + 'seg_%05d.png', frame_index_str, self.video_frame_rate, image_step)
+        cmd = 'python ' + STM_folder + 'demo_youtop.py --image-template %s  --mask-folder %s --output-template %s --input-index "%s" --input-fps %d --image-step %d --stm-height 480 --shot-chunk-len 500 --redo %d\n'
+        cmd = cmd % (image_template, mask_folder, output_folder + 'seg_%05d.png', frame_index_str, self.video_frame_rate, image_step, redo)
         if cmd_file is None:
             print(cmd)
         else:
             vutil.writetxt(cmd_file, cmd, 'a')
 
+    # grabcut for refinement
+    def RefineSeg(self, seg_folder = 'seg_out_all/', seg_folder_path = None,
+                 iter_image = 30, iter_algo = 50):
+        if seg_folder_path is None:
+            seg_folder_path = self.video_share_folder
+
+        refine_folder =  seg_folder_path + seg_folder[:-1] + '_refine/' 
+        vutil.mkdir(refine_folder)
+        im_folder =  seg_folder_path + 'im/' 
+        seg_folder = seg_folder_path + seg_folder 
+
+        files_name_seg = sorted(glob(seg_folder + '*.png'))
+        files_name_im = sorted(glob(im_folder + '*.png'))
+        for file_name in files_name_seg:
+            output_name = refine_folder + file_name[file_name.rfind('/'):]
+            if not os.path.exists(output_name):
+                seg = imageio.imread(file_name)
+                fid = int(file_name[file_name.rfind('s')+1:-4])
+                im = imageio.imread(files_name_im[fid])
+                seg_out = vutil.segRefineGrabcut(im, seg, iter_image, iter_algo)
+                if seg_out is not None:
+                    imageio.imwrite(output_name, seg_out)    

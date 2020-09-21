@@ -27,6 +27,7 @@ if __name__ == "__main__":
     vopt=1;vv=['9bZkp7q19f0']
     vopt=0;vv=['cooking']
     vopt=0;vv=['music_video']
+    vv=[]
     
     fn = 'data/video_v0';vv=[]
 
@@ -51,15 +52,13 @@ if __name__ == "__main__":
         if opt == '0':
             # Prepage images
             vp.copyFrames(vp.video_web_folder % 'frame_ds/', frame_downsample = vp.video_frame_size[1]//320)
-        elif opt == '0.01': # clean up
-            import pdb; pdb.set_trace()
         elif opt == '0.1':
             # Generate htmls/js
             #vp.webProofreadFolder()
             vp.setRedo(True)
             #vp.webProofreadShot()
-            vp.webProofreadSeg()
-            #vp.webProofreadCluster()
+            #vp.webProofreadSeg(input_txt ='shot_all')
+            vp.webProofreadCluster()
         elif opt == '0.2':
             # Copy final js result: web -> data
             js_in = vp.getShotJs()
@@ -117,6 +116,10 @@ if __name__ == "__main__":
             Di = vp.video_share_folder + 'overlays/'
             Do = vp.video_web_folder % 'seg_ds/'
             name_replace = ['overlay_', 'refine_']
+
+            Di = (vp.video_share_folder % '') + 'refined_seg/'
+            Do = (vp.video_web_folder % '') + 'refined_seg/'
+            name_replace = []
             """
             # shot boundary 
             Di = vp.video_share_folder + 'seg_shot_bd/'
@@ -126,14 +129,12 @@ if __name__ == "__main__":
             # for google drive need to refresh the filesystem
             os.system('ls ' + Di)
             vutil.copyFolder(Di, Do, name_replace=name_replace)
-
-            #vutil.copyFolder(Di, Do)
         # check files: middle/share
         elif opt == '2.1':
             # refinement for display 
             Di = vp.video_share_folder + 'overlays/'
             # shot boundary 
-            Di = vp.video_share_folder + 'seg_shot_bd/'
+            # Di = vp.video_share_folder + 'seg_shot_bd/'
             if not os.path.exists(Di):
                 print('No',Di)
             else:
@@ -143,7 +144,6 @@ if __name__ == "__main__":
         # on web server: copy files: middle/share -> web
         elif opt == '3':
             # refinement for display 
-            Di = vp.video_share_folder + 'overlays/'
-            Do = vp.video_web_folder % ''
-
-            vutil.copyFolder(Di, Do, name_replace=['overlay_', 'refine_'])
+            Di = vp.video_share_folder % 'seg_ds'
+            Do = vp.video_web_folder % 'seg_ds'
+            vutil.copyFolder(Di, Do, frame_downsample=2)

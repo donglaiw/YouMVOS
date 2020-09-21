@@ -3,7 +3,10 @@ html_seg = """
 <script src="../../js/util.js"></script>
 Shot starting IDs: <textarea id="shot" cols=50 rows=10></textarea> (separated by comma)
 <br/>
+Mask prefix: <textarea id="prefix" cols=50 rows=1></textarea> (e.g. refine_)
+<br/>
 <button id="sub" style="width:400;height=200">Done</button>
+
 <div id="img"></div>
 
 <form id="mturk_form" method="POST" style="display:none">
@@ -16,6 +19,16 @@ var shot_start = [0];
 var shot_selection = [0];
 var frame_folder = "%s";
 var mask_folder = "%s";
+var mask_prefix = "%s";
+
+var pid=parseInt();
+// get prefix from url
+var mask_prefix_url = getUrlParam('pref');
+if (mask_prefix_url.length > 0){
+    mask_prefix = mask_prefix_url;
+}
+
+$("#prefix").val(mask_prefix)
 var video_name = "%s";
 var overlay_id = [%s];
 var genre_name = "./";
@@ -35,15 +48,18 @@ function loadJs_cb(){
 }
 loadJs('_shot', loadJs_cb)
 
+// shot index: 0 - K
+// original index: shot*fps +1
+function getIndex(i){
+    return 1 + (i * fps);
+}
 function getMaskName(i){
-    var im_id = i;
-    var fn = mask_folder + video_name + "/overlay_" + printf5d(im_id) + '.png';
+    var fn = mask_folder + video_name + "/" + mask_prefix + printf5d(getIndex(i)) + '.png';
     return fn;
 }
 
 function getImName(i){
-    var im_id = 1 + (i * fps)
-    var fn = frame_folder + video_name + "/image_" + printf5d(im_id) + '.png';
+    var fn = frame_folder + video_name + "/image_" + printf5d(getIndex(i)) + '.png';
     return fn;
 }
 
@@ -68,7 +84,7 @@ function update_display(){
                 out += '<tr>'
             }
             out+='<td class="mask" style="padding:6px;background-color:white" id="i'+j+'">'
-            if(overlay_id.includes(j)){
+            if(overlay_id.includes(getIndex(j))){
                 out += '<img height=100 src="'+getMaskName(j)+'">' 
             }else{
                 out += '<img height=100 src="'+getImName(j)+'">'
@@ -117,6 +133,11 @@ $("#shot").change(function(){
     var shot_start_str = $(this).val();
     var shot_selection_str = updateArr(shot_start, shot_selection, strToArray(shot_start_str), '0');
     update_value(shot_start_str, shot_selection_str);
+});
+
+$("#prefix").change(function(){
+    mask_prefix = $(this).val();
+    update_display();
 });
 
 $("#sub").click(function(){

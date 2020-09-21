@@ -50,11 +50,11 @@ function update_display(){
         var cluster_len = shot_index[i].length;
         for(var j = 0; j < cluster_len; j ++){
             if (j %% numCol == 0){
-                out += '<tr><td>'
+                out += '<tr>'
             }
-            out+='<img height=100 src="'+getImName(shot_index[i][j])+'">'
+            out += '<td>'+shot_index[i][j] + '<br/><img height=100 src="'+getImName(shot_index[i][j])+'"></td>'
             if ((j + 1) %% numCol == 0){
-                out +='</td></tr>'
+                out +='</tr>'
             }
         }
         if (cluster_len %% numCol != 0){

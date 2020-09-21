@@ -30,7 +30,6 @@ if __name__ == "__main__":
     vp.setInputVideoJson(fn + '.json')
 
     for vid,video_name in enumerate(vp.video_all_name[job_id::job_num]):
-
         if len(vv) > 0 :
             if vopt == 0:
                 if video_name[:video_name.rfind('/')] not in vv:
@@ -89,9 +88,12 @@ if __name__ == "__main__":
             if vp.video_url in ['RB-RcX5DS5A','iS1g8G_njx8','RBumgq5yVrA']:
                 continue
             vp.computeSTMSeg(lib_stm_folder, index_type = index_type, \
-                                    output_folder = vp.video_share_folder + 'seg_prop/', \
-                                    cmd_file = cmd_file)
-        elif opt == '2.1': # compute display
+                                    output_folder = (vp.video_share_folder % '') + 'seg_prop/', \
+                                    cmd_file = cmd_file, redo = 1)
+        elif opt == '2.1': # stm display
+            if vp.video_url in ['RB-RcX5DS5A','JGwWNGJdvx8']:
+                continue
+            vp.visualizeSegPng(output_prefix='stm_', frame_index = 'shot_all')
 
         elif opt == '9':
             f0 = vp.video_name[:vp.video_name.find('/')]
