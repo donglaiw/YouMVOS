@@ -57,8 +57,8 @@ if __name__ == "__main__":
             #vp.webProofreadFolder()
             vp.setRedo(True)
             #vp.webProofreadShot()
-            vp.webProofreadSeg(input_txt ='shot_all')
-            #vp.webProofreadCluster()
+            #vp.webProofreadSeg(input_txt ='shot_all')
+            vp.webProofreadCluster()
         elif opt == '0.2':
             # Copy final js result: web -> data
             js_in = vp.getShotJs()
@@ -114,6 +114,9 @@ if __name__ == "__main__":
             # refinement for display 
             Di = vp.video_share_folder + 'overlays/'
             Do = vp.video_web_folder % 'seg_ds/'
+
+            Di = vp.video_share_folder + 'refined_seg/'
+            Do = (vp.video_web_folder % '') + 'refined_seg/'
             """
             # shot boundary 
             Di = vp.video_share_folder + 'seg_shot_bd/'
@@ -126,7 +129,7 @@ if __name__ == "__main__":
             # refinement for display 
             Di = vp.video_share_folder + 'overlays/'
             # shot boundary 
-            Di = vp.video_share_folder + 'seg_shot_bd/'
+            # Di = vp.video_share_folder + 'seg_shot_bd/'
             if not os.path.exists(Di):
                 print('No',Di)
             else:
