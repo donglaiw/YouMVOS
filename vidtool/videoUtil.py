@@ -120,28 +120,18 @@ def writegif(outname, vol, ratio=1, duration=0.5):
         out = vol
     imageio.mimsave(outname, out, 'GIF', duration=duration)
 
-def visSeg(im, seg, option=0):
-    alpha = 0.7
-    if seg.ndim == 3:
-        seg = seg[:,:,2]
-    if option == 0: # gray image
-        # to keep the color label consistent
-        # make sure all indices are present
-        # hack the first elements 
-        seg_mid = seg.max()
-        prev_val = seg[0,:seg_mid].copy()
-        seg[0,:seg_mid] = range(seg_mid) 
-        seg_color = label2rgb(seg, bg_label=0)
-        seg_color[0,:seg_mid] = seg_color[0,prev_val]
-        im_gray = rgb2gray(im)[:,:,None]
-        output = (255*(alpha * im_gray + (1 - alpha) * seg_color)).astype(np.uint8)
-        return output 
-    elif option == 1: # original image
-        out = im.copy()
-        seg_colored = 255.*label2rgb(seg, colors = COLOR64)
-        seg_mask = np.tile(seg[:, :, None]>0, [1,1,3])
-        out[seg_mask] = (im[seg_mask].astype(float) * frame_alpha + seg_colored[seg_mask] * (1 - frame_alpha)).astype(np.uint8)
-        return out
+def visSeg(img, seg, color = 0):
+    clr = np.array(['black', 'blue', 'yellow', 'darkorange', 'magenta', 'cyan', 'yellowgreen', 'red', 'pink', 'indigo', 'green'])
+    uid = np.unique(seg)
+    ovrl_gray = 255.*label2rgb(seg, img, clr[uid[uid > 0]], bg_label = 0)
+    if not color: return np.uint8(ovrl_gray)
+
+    seg_mask = np.tile(seg[:, :, None] > 0, [1,1,3])
+    seg_neg = np.tile(seg[:, :, None] == 0, [1,1,3])
+    imx = np.zeros(img.shape)
+    imx[seg_mask] = ovrl_gray[seg_mask]
+    imx[seg_neg] = img[seg_neg]
+    return np.uint8(imx)
 
 def convertClusterStrToClusterList(cluster_str):
     if cluster_str[-1] == ';':
