@@ -17,6 +17,7 @@ GENRE['vlog'] = 'skit-show'
 GENRE['comedy'] = 'skit-show'
 GENRE['interview'] = 'skit-show'
 
+## video-related function
 def getVideoInfo(video_url):
     output_file = 'db/tmp.info'
     os.system('ffprobe %s > %s 2>&1' % (video_url, output_file))
@@ -26,29 +27,6 @@ def getVideoInfo(video_url):
     sz = [x.strip().split(' ')[0] for x in info_s if '[SAR 1:1' in x][0]
     fps = [x.strip().split(' ')[0] for x in info_s if 'fps' in x][0]
     return sz, fps
-
-def VideoTxtToJson(input_txt, output_json, video_folder, frame_folder):
-    input_videos = readtxt(input_txt)
-    output = {}
-    for line in input_videos:
-        video_name, video_author, video_title = line[:-1].split(',')
-        video_url = video_name[video_name.rfind('/') + 1 : ]
-        num_frame = len(glob.glob(frame_folder + video_name + '/frame/*.png'))
-        video_size, video_fps = getVideoInfo(video_folder + video_name + '/' + video_url + '.mp4')
-        output[video_name] = {'author': video_author,
-                             'title': video_title,
-                             'num_frame': num_frame,
-                             'fps': float(video_fps),
-                             'size': [int(x) for x in video_size.split('x')]}
-    json.dump(output, open(output_json,'w'))
-
-def VideoTxtToJs(input_txt, output_js):
-    input_videos = readtxt(input_txt)
-    video_names = ['"' + x.split(',')[0] + '"' for x in input_videos]
-    output = 'var video_name = [' + ','.join(video_names) + '];'
-
-    writetxt(output_js, output)
-
 
 def downloadVideo(video_url, output_mp4 = None):
     if output_mp4 is None:
@@ -80,6 +58,30 @@ def checkVideoTxt(input_file):
             print("each line should be: genre/video_url, author, title") 
             raise ValueError('Wrong input format: ', line)
 
+def VideoTxtToJson(input_txt, output_json, video_folder, frame_folder):
+    input_videos = readtxt(input_txt)
+    output = {}
+    for line in input_videos:
+        video_name, video_author, video_title = line[:-1].split(',')
+        video_url = video_name[video_name.rfind('/') + 1 : ]
+        num_frame = len(glob.glob(frame_folder + video_name + '/frame/*.png'))
+        video_size, video_fps = getVideoInfo(video_folder + video_name + '/' + video_url + '.mp4')
+        output[video_name] = {'author': video_author,
+                             'title': video_title,
+                             'num_frame': num_frame,
+                             'fps': float(video_fps),
+                             'size': [int(x) for x in video_size.split('x')]}
+    json.dump(output, open(output_json,'w'))
+
+def VideoTxtToJs(input_txt, output_js):
+    input_videos = readtxt(input_txt)
+    video_names = ['"' + x.split(',')[0] + '"' for x in input_videos]
+    output = 'var video_name = [' + ','.join(video_names) + '];'
+
+    writetxt(output_js, output)
+
+
+
 
 def readtxt(filename):
     a= open(filename)
@@ -87,10 +89,10 @@ def readtxt(filename):
     a.close()
     return content
 
-def mkdir(fn, opt = 0):
-    if opt == 1: 
+def mkdir(fn, opt = 'dir'):
+    if opt == 'dir': 
         # Create the folder that the file is in.
-        fn = fn[:fn.rfind('/')]
+        fn = os.path.dirname(fn)
     if not os.path.exists(fn):
         os.makedirs(fn)
 

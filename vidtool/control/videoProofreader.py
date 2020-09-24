@@ -4,17 +4,15 @@ import numpy as np
 from glob import glob
 import imageio
 
-from .view import *
+from ..view import *
+from .. import videoUtil as vutil
 
-from .videoBasic import videoBasic
-from . import videoUtil as vutil
-
-class videoProofreader(videoBasic):
-    def __init__(self, job_id = 0, job_num = 1, redo = False):
-        super().__init__(job_id, job_num, redo)
+class videoProofreader(object):
+    def __init__(self, data = None):
+        self.data= data
     
     def webProofreadFolder(self):
-        folder_name = (self.video_web_folder % 'proofread/')[:-1]
+        folder_name = (self.data.video_web_folder % self.data.proofread_folder)[:-1]
         folder_name = folder_name[:folder_name.rfind('/') + 1]
         if not os.path.exists(folder_name + '/saved/'):
             os.mkdir(folder_name + '/saved/')

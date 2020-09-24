@@ -7,8 +7,7 @@ from scipy.ndimage.morphology import binary_erosion, binary_dilation, distance_t
 from random import randrange
 import re
 
-class RefinementModule:
-
+class segRefinement(object):
   def __init__(self, image_list, seg_list, colors = None, alpha_fade = 1, alpha_trans = 0.7, erode_ratio = 0.9, erode_iter = [3, 20]):
     self.images = sorted(image_list)
     self.masks = sorted(seg_list)
