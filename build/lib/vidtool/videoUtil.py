@@ -141,6 +141,7 @@ def convertClusterStrToClusterList(cluster_str):
     cluster_list = [[int(y) for y in x.split(',')] for x in cluster_str.split(';')]
     return cluster_list
 
+
 def convertClusterListToStr(shots):
     return ';'.join([','.join([str(y) for y in shots[x]]) for x in range(len(shots))]) 
 
@@ -152,22 +153,10 @@ def convertClusterArrToStr(cluster_ids):
 def convertClusterToJs(shots):
     if isinstance(shots, list):
         cluster_str = convertClusterListToStr(shots)
-    elif isinstance(shots, np.ndarray):
+    elif isinstance(shots, numpy.ndarray):
         cluster_str = convertClusterArrToStr(shots)
     output_js = 'var shot_index_str="' + cluster_str + '";'
-    output_js += 'var shot_selection_str="' + ','.join('0'*len(shots)) + '";'
-    return output_js
-
-def convertShotToJs(self, shots, frame_rate = 1):
-    # need consecutive numbers for easy editing
-    # Take the ceil for the start frame.
-    # Can be repeated due to frame_rate downsample
-    if shots.ndim == 1:
-        shots = [(shots[0] + frame_rate - 1) // frame_rate]
-    else:
-        shots = np.unique((shots[:, 0] + frame_rate - 1) // frame_rate)
-    output_js = 'var shot_start_str="'+','.join([str(x) for x in shots])+'";'
-    output_js += 'var shot_selection_str="'+','.join([str(0) for x in shots])+'";'
+    output_js += 'var shot_selection_str="0";'
     return output_js
 
 def copyFolder(input_folder, output_folder, file_ext='png', name_replace=[]):

@@ -23,8 +23,6 @@ if (video_name.includes('/')){
     video_url = video_name.substr(video_name.lastIndexOf('/') + 1);
 }
 var num = %d;
-var fps = %d;
-var frame_offset = %d;
 
 function loadJs_cb(){
     $('#shot').val(shot_index_str)
@@ -33,8 +31,7 @@ function loadJs_cb(){
 loadJs('_cluster', loadJs_cb)
 
 
-function getImName(i){
-    var im_id = i * fps + frame_offset;
+function getImName(im_id){
     var fn = frame_folder + video_name + "/image_" + printf5d(im_id) + '.png';
     return fn
 }
@@ -98,7 +95,6 @@ $("#shot").change(function(){
 
 $("#sub").click(function(){
     //
-    console.log($("#shot").val().replace(/[\\r\\n]+/gm, ''))
     console.log(''+shot_selection)
     /*
     ans_out = $("#shot").val();

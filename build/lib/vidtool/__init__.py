@@ -9,6 +9,7 @@ class videoTool(object):
     def __init__(self, job_id = 0, job_num = 1, redo = False):
         self.job_id = job_id
         self.job_num = job_num
+        self.redo = redo
         self.data = videoData() 
         self.proofreader = videoProofreader(self.data)
         self.processor = videoProcessor(self.data)
@@ -23,4 +24,6 @@ class videoTool(object):
         self.job_num = 1
 
     def setRedo(self, redo):
-        self.data.redo = redo
+        self.redo = redo
+
+

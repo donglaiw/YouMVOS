@@ -14,7 +14,7 @@ class videoProcessor(object):
         self.lib_shot_detection = None
         self.lib_seg_refinement = None
         self.lib_frame_cluster = None
-
+    
     # 0. frame i/o
     def frameCopy(self, output_folder, frame_ids='all', frame_rate = -1, frame_downsample = 1):
         vutil.mkdir(output_folder)
@@ -26,7 +26,7 @@ class videoProcessor(object):
         for frame_id in frame_ids[self.job_id :: self.job_num]:
             frame_name_in = self.data.getFrameName(frame_id)
             frame_name_out = output_folder + frame_name_in[frame_name_in.rfind('/'):]
-            if self.data.redo or not os.path.exists(frame_name_out):
+            if not os.path.exists(frame_name_out):
                 if frame_downsample != 1:
                     output = imageio.imread(frame_name_in)[::frame_downsample, ::frame_downsample]
                     imageio.imwrite(frame_name_out, output)
@@ -47,7 +47,7 @@ class videoProcessor(object):
         frame_size[:2] = (frame_size[:2] + frame_downsample - 1) // frame_downsample
         for frame_id in frame_ids[self.job_id :: self.job_num]:
             output_file = self.data.getFrameName(frame_id, output_folder)
-            if self.data.redo or not os.path.exists(output_file):
+            if not os.path.exists(output_file):
                 output = self.data.getFrame(frame_id)[::frame_downsample, ::frame_downsample]
                 imageio.imwrite(output_file, output)
 
@@ -65,17 +65,18 @@ class videoProcessor(object):
         self.lib_shot_detection.computeShot(thres_dark, thres_diff, thres_shot_len)
 
     # for frame clustering
-    def frameCluster(self, thres_sim = 0.86, thres_small = [5,0.82], metric = 'cosine'):
+    def frameCluster(self, thres_sim = 0.86, thres_small = [5,0.8], metric = 'cosine'):
         from ..lib import frameCluster
-        output_file = self.data.getJs(suf = '_cluster')
-        if self.data.redo or not os.path.exists(output_file):
+        output_file = self.data.getJS(suf = '_cluster')
+        if not os.path.exists(output_file):
             frame_ids = self.data.getFrameIndex()
-            frame_template = self.data.FRAME_NAME.format(self.data.video_name, '_ds')
+            frame_template = self.data.FRAME_NAME.format(self.video_name, '_ds')
             frame_names = [frame_template%x for x in self.data.getFrameIndex()]
             if self.lib_frame_cluster is None:
-                self.lib_frame_cluster = frameCluster(frame_names, self.data.video_frame_rate)
+                self.lib_frame_cluster = frameCluster(frame_names)
             else:
-                self.lib_frame_cluster.setInfo(frame_names, self.data.video_frame_rate)
+                self.lib_frame_cluster.setImageList(frame_names)
+            import pdb; pdb.set_trace()
             cluster_ids = self.lib_frame_cluster.getClusterId(thres_sim, thres_small, metric)
             vutil.writetxt(output_file, vutil.convertClusterToJs(cluster_ids))
                 
@@ -109,7 +110,7 @@ class videoProcessor(object):
     # 3. STM for video object segmentation
     def segSTM(self, STM_folder = None, frame_ids = 'shot_all_list', frame_ids_file = None, \
                              image_template = None, mask_folder = None, output_template = None, \
-                             cmd_file = None):
+                             cmd_file = None, redo = 0):
         # https://github.com/donglaiw/STM
         # frame_ids: list of arrays (cluster result) or Nx2 matrix (shot result)  
         # mask_folder: can have different indexing system (so long it's indexed)
@@ -147,7 +148,7 @@ class videoProcessor(object):
             raise ValueError('unsuitable video frame rate for propagation: %d' % image_step)
 
         cmd = 'python ' + STM_folder + 'demo_youtop.py --image-template %s  --mask-folder %s --output-template %s --input-index "%s" --input-fps %d --image-step %d --stm-height 480 --shot-chunk-len 250 --redo %d\n'
-        cmd = cmd % (image_template, mask_folder, output_template, frame_ids_str, self.data.video_frame_rate, image_step, self.data.redo)
+        cmd = cmd % (image_template, mask_folder, output_template, frame_ids_str, self.data.video_frame_rate, image_step, redo)
         if cmd_file is None:
             print(cmd)
         else:
@@ -169,7 +170,7 @@ class videoProcessor(object):
         files_name_im = sorted(glob(im_folder + '*.png'))
         for file_name in files_name_seg:
             output_name = refine_folder + file_name[file_name.rfind('/'):]
-            if self.data.redo or not os.path.exists(output_name):
+            if not os.path.exists(output_name):
                 seg = imageio.imread(file_name)
                 fid = int(file_name[file_name.rfind('s')+1:-4])
                 im = imageio.imread(files_name_im[fid])

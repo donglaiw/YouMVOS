@@ -13,8 +13,10 @@ if __name__ == "__main__":
 
     fn = 'data/video'
     fn = 'data/video_v1'
-    vopt=1;vv=['9bZkp7q19f0']
     vopt=0;vv=['music_video']
+    vopt=0;vv=['cooking']
+    vopt=1;vv=['iUtLMkLhUKY']
+    #vopt=1;vv=['iS1g8G_njx8']
     #fn = 'data/video_v0'
 
     vtool.data.setInputVideoJson(fn + '.json')
@@ -40,10 +42,10 @@ if __name__ == "__main__":
                 vutil.VideoTxtToJs(fn + '.txt', web_folder + 'js/%s.js' % fn[fn.rfind('/')+1:])
                 break
         elif opt =='0.1': # shot detection
-            thres_dark = 50;
-            thres_diff = 20
-            thres_shot_len = 1
-            vtool.computeShot(thres_dark, thres_diff, thres_shot_len)
+            vtool.processor.shotDetection()
+        elif opt =='0.2': # cluster frames
+            #vtool.setRedo(True)
+            vtool.processor.frameCluster()
 
         # Detectron2
         elif opt == '1':
@@ -68,13 +70,17 @@ if __name__ == "__main__":
             frame_ids = 'cluster'
             if vtool.data.video_genre in ['music_video']:
                 frame_ids = 'shot_all_list'
-            if vtool.data.video_url in ['RB-RcX5DS5A','iS1g8G_njx8','RBumgq5yVrA']:
+            if vtool.data.video_url in ['RB-RcX5DS5A','iS1g8G_njx8']:
+                continue
+            if vtool.data.video_url not in ['RBumgq5yVrA']:
                 continue
 
             vtool.processor.segSTM(frame_ids = frame_ids, cmd_file = cmd_file)
 
         elif opt == '2.1': # stm display
-            if vtool.data.video_url in ['RB-RcX5DS5A','iS1g8G_njx8','RBumgq5yVrA']:
+            if vtool.data.video_url in ['RB-RcX5DS5A','iS1g8G_njx8']:
+                continue
+            if vtool.data.video_url not in ['RBumgq5yVrA']:
                 continue
             vtool.visualizer.visSegPng(output_prefix='stm_', frame_ids = 'shot_all')
 

@@ -1,7 +1,7 @@
-html_cluster = """
+html_shot = """
 <script src="../../js/jquery-1.7.1.min.js"></script>
 <script src="../../js/util.js"></script>
-Shot starting IDs: <textarea id="shot" cols=120 rows=10></textarea> (separated by comma)
+Shot starting IDs: <textarea id="shot" cols=50 rows=10></textarea> (separated by comma)
 <br/>
 <button id="sub" style="width:400;height=200">Done</button>
 <div id="img"></div>
@@ -12,7 +12,7 @@ Shot starting IDs: <textarea id="shot" cols=120 rows=10></textarea> (separated b
      <input id="ans" name="ans">
 </form>
 <script>
-var shot_index = [0];
+var shot_start = [0];
 var shot_selection = [0];
 var frame_folder = "%s";
 var video_name = "%s";
@@ -24,19 +24,18 @@ if (video_name.includes('/')){
 }
 var num = %d;
 var fps = %d;
-var frame_offset = %d;
 
 function loadJs_cb(){
-    $('#shot').val(shot_index_str)
-    update_value(shot_index_str, shot_selection_str);
+    $('#shot').val(shot_start_str)
+    update_value(shot_start_str, shot_selection_str);
 }
-loadJs('_cluster', loadJs_cb)
+loadJs('_shot', loadJs_cb)
 
 
 function getImName(i){
-    var im_id = i * fps + frame_offset;
+    var im_id = 1 + (i * fps)
     var fn = frame_folder + video_name + "/image_" + printf5d(im_id) + '.png';
-    return fn
+    return fn;
 }
 
 function update_display(){
@@ -47,20 +46,24 @@ function update_display(){
     out += "</thead>"
     out += '<tbody style="display:block;height:1300px;overflow-y:auto">'
     var lt = 1;
-    for(i = 0;i < shot_index.length; i ++){
-        out+='<tr><td id="t'+(i)+'" class="shot_sel" style="background-color:'+color_name_shot[shot_selection[i]]+';">cluster '+(i)+"</td><td>"+shot_index[i][0]+'-'+shot_index[i][shot_index[i].length-1]+"</td><td>"
+    for(i = 0;i < shot_start.length; i ++){
+        if(i == shot_start.length - 1){
+            lt = num - 1;
+        }else{
+            lt = shot_start[i+1] - 1
+        }
+        out+='<tr><td id="t'+(i)+'" class="shot_sel" style="background-color:'+color_name_shot[shot_selection[i]]+';">'+(i)+"</td><td>"+shot_start[i]+"-"+(lt)+"</td><td>"
         out+='<table>'
-        var cluster_len = shot_index[i].length;
-        for(var j = 0; j < cluster_len; j ++){
-            if (j %% numCol == 0){
-                out += '<tr>'
+        for(j = shot_start[i]; j < lt + 1; j ++){
+            if ((j - shot_start[i]) %% numCol == 0){
+                out += '<tr><td>'
             }
-            out += '<td>'+shot_index[i][j] + '<br/><img height=100 src="'+getImName(shot_index[i][j])+'"></td>'
-            if ((j + 1) %% numCol == 0){
-                out +='</tr>'
+            out+='<img height=100 src="'+getImName(j)+'">'
+            if ((j - shot_start[i] + 1) %% numCol == 0){
+                out +='</td></tr>'
             }
         }
-        if (cluster_len %% numCol != 0){
+        if ((lt - shot_start[i] + 1) %% numCol != 0){
             out += '</td></tr>'
         }
         out += '</table>'
@@ -76,33 +79,29 @@ function update_display(){
         var row_id = parseInt($(this)[0].id.substr(1))
         shot_selection[row_id] = color_id;
     });
+ 
 }
 
-function update_value(shot_index_str, shot_selection_str){
-    shot_index = strToArray2(shot_index_str);
+
+function update_value(shot_start_str, shot_selection_str){
+    shot_start = strToArray(shot_start_str);
     shot_selection = strToArray(shot_selection_str);
     update_display();
 }
 
 $("#shot").change(function(){
-    var tmp_index_str = $(this).val();
-    var tmp_index = strToArray2(tmp_index_str);
-    var tmp_start = tmp_index.map(x => x[0]);
-    var shot_start = shot_index.map(x => x[0]);
-    var shot_selection_str = updateArr(shot_start, shot_selection, tmp_start, '0');
-
-    update_value(tmp_index_str, shot_selection_str);
-
+    var shot_start_str = $(this).val();
+    var shot_selection_str = updateArr(shot_start, shot_selection, strToArray(shot_start_str), '0');
+    update_value(shot_start_str, shot_selection_str);
 });
 
 
 $("#sub").click(function(){
     //
-    console.log($("#shot").val().replace(/[\\r\\n]+/gm, ''))
-    console.log(''+shot_selection)
+    console.log('shot:'+shot_selection);
     /*
     ans_out = $("#shot").val();
-    document.getElementById("ans").value = 'var shot_index_str="'+ans_out+'";var shot_selection_str="'+shot_selection+'"';
+    document.getElementById("ans").value = 'var shot_start_str="'+ans_out+'";var shot_selection_str="'+shot_selection+'"';
     document.getElementById("folder").value = get_js_name(false);
     tmp = $.post("../../save_ans.php", $("#mturk_form").serialize(), function(data) {
         window.location=window.location.href.substring(0, window.location.href.lastIndexOf("/"));

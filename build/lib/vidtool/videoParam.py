@@ -20,7 +20,8 @@ class videoParam(object):
         # processor filename and path
         self.PROCESSOR_DETECTON2 = self.FOLDER_VAST + "%s/seg_2d/" # video name
         self.PROCESSOR_STM = self.FOLDER_VAST + "{}/seg_prop/seg_%05d.png" # video name
-        self.PROCESSOR_VAST = self.FOLDER_VAST + "%s/%s/" # video name
+        self.PROCESSOR_VAST_BD = self.FOLDER_VAST + "%s/seg_shot_bd/" # video name
+        self.PROCESSOR_REFINE = self.FOLDER_VAST + "%s/seg_refine/" # video name
 
         # proofreader filename and path
         self.PROOFREADER_ROOT = self.FOLDER_WEB + "proofread/"
