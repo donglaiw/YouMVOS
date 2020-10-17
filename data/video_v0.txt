@@ -1,10 +1,10 @@
 music_video/RB-RcX5DS5A,Coldplay,The Scientist
 kid/F4tHL8reNCs,LooLoo Kids,Johny Johny Yes Papa
-animation/KYniUCGPGLs,Get Movies,Masha and The Bear-Recipe for disaster (Episode 17)
+kid/KYniUCGPGLs,Get Movies,Masha and The Bear-Recipe for disaster (Episode 17)
 cooking/3nUKwvFsjA4,cooking show with James Corden,English Breakfast with Gordon and Matilda Ramsay
-comedy/qVMW_1aZXRk, SNL,Donald Trump vs. Hillary Clinton Town Hall Debate Cold Open
+tv/qVMW_1aZXRk, SNL,Donald Trump vs. Hillary Clinton Town Hall Debate Cold Open
 product/dfToHzOmwdI,Lit Mobile, Solar Power Bank Product Review
-vlog/0oPa3GJJDDA,funforlouis, EPIC WORLD ADVENTURE
+tv/0oPa3GJJDDA,funforlouis, EPIC WORLD ADVENTURE
 howto/j2C8MkY7Co8,Robert C. Hamilton,How To Calm A Crying Baby
-history/Yocja_N5s1I,CrashCourse,The Agricultural Revolution
+education/Yocja_N5s1I,CrashCourse,The Agricultural Revolution
 sports/wgVOgGLtPtc,NBA,Final 3:39 of Game 7 of the 2016 NBA Finals

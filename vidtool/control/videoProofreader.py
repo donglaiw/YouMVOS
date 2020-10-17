@@ -12,13 +12,11 @@ class videoProofreader(object):
         self.data= data
     
     def webProofreadFolder(self):
-        folder_name = (self.data.video_web_folder % self.data.proofread_folder)[:-1]
-        folder_name = folder_name[:folder_name.rfind('/') + 1]
+        folder_name = self.data.PROOFREADER_ROOT + self.data.video_genre + '/'
         if not os.path.exists(folder_name + '/saved/'):
             os.mkdir(folder_name + '/saved/')
             os.chmod(folder_name + '/saved/', 0o777)
         vutil.mkdir(folder_name + '/test/')
-        vutil.mkdir(folder_name + '/result/')
 
     def webProofreadShot(self, input_txt = None, frame_rate = -1):
         # Convert shot_txt into js and html
@@ -68,6 +66,7 @@ class videoProofreader(object):
             frame_rate = self.video_frame_rate
 
         output_html = self.getHtml('_seg')
+        vutil.mkdir(output_html, 'dir')
         if self.data.redo or not os.path.exists(output_html):
             print('do seg')
             if input_txt is None: # load what is available
@@ -87,13 +86,13 @@ class videoProofreader(object):
             # frame_ids is the option
             frame_ids = self.data.getFrameIndex(frame_ids, input_file = input_js)
 
-        frame_ids_str = ','.join([str(x) for x in frame_ids])
+        frame_ids_str = vutil.converArrToStr(frame_ids)
         frame_size = np.array(self.data.getFrameImage(frame_ids[0]).shape)
 
         # output vsvi
         vsvi_type = ['im', 'seg']
         vsvi_filename = ['image_%05d.png','seg_%05d.png']
-        output_folder = self.data.PROCESSOR_VAST %(self.data.video_name,'')
+        output_folder = self.data.PROCESSOR_VAST.format(self.data.video_name)
         for vsvi_id in range(len(vsvi_type)):
             output_vsvi =  output_folder + '%s.vsvi' % (vsvi_type[vsvi_id] + frame_suf)
             if self.data.redo or not os.path.exists(output_vsvi):

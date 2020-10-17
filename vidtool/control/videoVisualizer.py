@@ -1,5 +1,7 @@
 import os
 import imageio
+from glob import glob
+import numpy as np
 
 from .. import videoUtil as vutil
 
@@ -8,22 +10,24 @@ class videoVisualizer(object):
     def __init__(self, data = None):
         self.data = data
 
-    def visClipGif(self, frame_folder = None, output_file = None, frame_stride = 1, frame_num = -1, frame_duration = 0.2):
+    def visClipGif(self, frame_folder = None, output_file = None, frame_stride = 1, frame_num = -1, frame_duration = 0.2, frame_type = 'video'):
         if frame_folder is None:
-            frame_folder = self.getFrameName(-2, suffix = '_ds')
+            frame_folder = self.data.getFrameName(-2, suffix = '_ds')
         if output_file is None:
-            output_file = (self.video_folder_web % 'gif')[: -1] + '_video.gif'
+            output_file = (self.data.PROOFREADER_GIF.format(self.data.video_name, frame_type))
 
         if not os.path.exists(output_file):
-            vutil.mkdir(output_file, 1)
-            frame_names = sorted(glob(frame_folder + '*.png')) 
+            vutil.mkdir(output_file, 'dir')
+            frame_names = sorted(glob(frame_folder + '/*.png')) 
+
+            if len(frame_names) == 0:
+                print('No frames in %s' % (frame_folder))
+                return
             if frame_num == -1:
                 frame_names = frame_names[::frame_stride]
             else:
                 frame_names = [frame_names[int(x)] for x in np.linspace(0, len(frame_names)-1, frame_num)]
 
-            if len(frame_names) == 0:
-                raise ValueError('No frames in %s' % (frame_folder))
             frame_size = list(imageio.imread(frame_names[0]).shape)
             output = np.zeros([len(frame_names)] + frame_size, np.uint8)
             for frame_id, frame_name in enumerate(frame_names):

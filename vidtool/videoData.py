@@ -49,6 +49,7 @@ class videoData(object):
             if frame_rate < 0:
                 self.video_frame_rate = self.video_all_info[video_name]['fps']
             self.video_frame_size = self.video_all_info[video_name]['size']
+            self.video_duration = self.video_all_info[video_name]['duration']
         self.video_frame_rate = int(np.round(self.video_frame_rate))
 
     ####
@@ -57,7 +58,7 @@ class videoData(object):
         if frame_name is None:
             frame_name = self.FRAME_NAME.format(self.video_name, suffix)
         if frame_id == -2: # return directory
-            return os.path.dirname(frame_name)
+            return os.path.dirname(frame_name) + '/'
         if frame_id >= 0:
             frame_name = frame_name % frame_id
         return frame_name 
@@ -78,18 +79,18 @@ class videoData(object):
 
             if 'shot' in option:
                 # Js: natural index without the framerate info
-                shots, shot_selection = self.convertShotJsToArr(input_file, option=1)
-                if option == 'shot': 
+                shots, shot_selection = self.loadShotJs(input_file, option='2d')
+                if option in ['shot_min']: 
                     # first frames in selected shots
                     # Exist single-frame shots
                     frame_ids = frame_ids[np.unique(shots[shot_selection == 0, 0])]
-                elif option == 'shot_all': 
+                elif option in ['shot_all']: 
                     # All frames in selected shots
                     frame_ids_list = []
                     for shot_id in np.where(shot_selection == 0)[0]:
                         frame_ids_list += list(frame_ids[range(shots[shot_id, 0], shots[shot_id, 1]+1)])
                     frame_ids = np.array(frame_ids_list)
-                elif option == 'shot_all_list': 
+                elif option in ['shot_all_list']: 
                     # All frames in selected shots
                     frame_ids_list = [None] * (shot_selection == 0).sum()
                     for i, shot_id in enumerate(np.where(shot_selection == 0)[0]):
@@ -97,9 +98,7 @@ class videoData(object):
                     frame_ids = frame_ids_list
             elif 'cluster' in option:
                 cluster_ids = self.loadClusterJs(input_file, option)
-                if 'first' in option: 
-                    cluster_ids = [min(x) for x in cluster_ids]
-                    frame_ids = frame_ids[cluster_ids]
+                frame_ids = frame_ids[cluster_ids]
         return frame_ids
 
     ####
@@ -122,16 +121,30 @@ class videoData(object):
         if cluster_js is None:
             cluster_js = self.getJs('_cluster')
         cluster_info = vutil.readtxt(cluster_js)[0].strip()
-        shot_index = vutil.convertClusterStrToClusterList(cluster_info[cluster_info.find('=')+2:cluster_info.rfind('var')-2]) 
+        shot_ids = vutil.convertClusterStrToClusterList(cluster_info[cluster_info.find('=')+2:cluster_info.rfind('var')-2]) 
         shot_selection = np.array([int(x) for x in cluster_info[cluster_info.rfind('=')+2:cluster_info.rfind('"')].split(',')]) 
         if option == 'cluster':
-            return shot_index, shot_selection
+            return shot_ids, shot_selection
         if 'selected_' in option:
-            shot_index = [shot_index[x] for x in np.where(shot_selection == 0)[0]]
-            if 'cluster_selected_list' in option:
-                return shot_index
+            try:
+                shot_ids = [shot_ids[x] for x in np.where(shot_selection == 0)[0]]
+            except:
+                import pdb; pdb.set_trace()
+            if 'min' in option:
+                shot_ids = [min(x) for x in shot_ids]
+            if 'mid' in option:
+                shot_ids = [x[np.argsort(x)[len(x)//2]] for x in shot_ids]
+            if 'max' in option:
+                shot_ids = [max(x) for x in shot_ids]
+            elif 'first' in option:
+                shot_ids = [x[0] for x in shot_ids]
+            elif 'lasst' in option:
+                shot_ids = [x[-1] for x in shot_ids]
+
+            if 'cluster_selected' in option:
+                return shot_ids
             elif 'cluster_selected_str' in option:
-                return vutil.convertClusterListToStr(shot_index)
+                return vutil.convertClusterListToStr(shot_ids)
 
     def loadShotJs(self, shot_js=None, option = 0, frame_rate = -1):
         if shot_js is None:
@@ -139,7 +152,7 @@ class videoData(object):
         shot_info = vutil.readtxt(shot_js)[0].strip()
         # start frame (N)
         shots = np.array([int(x) for x in shot_info[shot_info.find('=')+2:shot_info.find(';')-1].split(',')])
-        if option in [1, 2]:
+        if option in ['2d', 2]:
             # start-end frame (N x 2)
             if frame_rate < 0:
                 frame_rate = self.video_frame_rate

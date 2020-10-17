@@ -7,15 +7,8 @@ from skimage.color import label2rgb, rgb2gray
 import imageio
 import numpy as np
 import shutil
+from data import secret
 
-GENRE = {}
-GENRE['animation'] = 'kid-animation'
-GENRE['kid'] = 'kid-animation'
-GENRE['cartoon'] = 'kid-animation'
-GENRE['history'] = 'education'
-GENRE['vlog'] = 'skit-show'
-GENRE['comedy'] = 'skit-show'
-GENRE['interview'] = 'skit-show'
 
 ## video-related function
 def getVideoInfo(video_url):
@@ -26,19 +19,24 @@ def getVideoInfo(video_url):
     info_s = info.split(',')
     sz = [x.strip().split(' ')[0] for x in info_s if '[SAR 1:1' in x][0]
     fps = [x.strip().split(' ')[0] for x in info_s if 'fps' in x][0]
-    return sz, fps
 
-def downloadVideo(video_url, output_mp4 = None):
+    info = [os_line for os_line in os_out if 'Duration:' in os_line][0]
+    info_s = [float(x) for x in info[info.find(':')+1:info.find(',')].split(':')]
+    duration = (np.array([3600,60,1])*info_s).sum()
+    return sz, fps, duration
+
+
+def downloadVideo(video_url, output_mp4 = None, option=136):
     if output_mp4 is None:
         output_mp4 = '%s.mp4' % (video_url) 
     if not os.path.exists(output_mp4):
         # 136: 1280x720
         if video_url[0] == '-':
-            output_mp4 = '-- ' + output_mp4
-            video_url = '-- ' + video_url
-        cmd = "youtube-dl --no-check-certificate -f 136 " + video_url + " -o " + output_mp4
+            #output_mp4 = '-- ' + output_mp4
+            video_url = 'https://www.youtube.com/watch?v=' + video_url
+        cmd = "youtube-dl --no-check-certificate -f %d "%option + video_url + " -o " + output_mp4
         print(cmd)
-        mkdir(output_mp4, 1)
+        mkdir(output_mp4, 'dir')
         os.system(cmd)
 
 def checkVideoSize(input_mp4, desired_size = '1280x'):
@@ -65,11 +63,12 @@ def VideoTxtToJson(input_txt, output_json, video_folder, frame_folder):
         video_name, video_author, video_title = line[:-1].split(',')
         video_url = video_name[video_name.rfind('/') + 1 : ]
         num_frame = len(glob.glob(frame_folder + video_name + '/frame/*.png'))
-        video_size, video_fps = getVideoInfo(video_folder + video_name + '/' + video_url + '.mp4')
+        video_size, video_fps, video_duration = getVideoInfo(video_folder + video_name + '/' + video_url + '.mp4')
         output[video_name] = {'author': video_author,
                              'title': video_title,
                              'num_frame': num_frame,
                              'fps': float(video_fps),
+                             'duration': video_duration,
                              'size': [int(x) for x in video_size.split('x')]}
     json.dump(output, open(output_json,'w'))
 
@@ -89,6 +88,12 @@ def readtxt(filename):
     a.close()
     return content
 
+def remove(fn, opt = ''):
+    if os.path.exists(fn):
+        if opt =='':
+            os.remove(fn)
+        else:
+            shutil.rmtree(fn)
 def mkdir(fn, opt = 'dir'):
     if opt == 'dir': 
         # Create the folder that the file is in.
@@ -125,7 +130,7 @@ def writegif(outname, vol, ratio=1, duration=0.5):
 def visSeg(img, seg, color = 0):
     clr = np.array(['black', 'blue', 'yellow', 'darkorange', 'magenta', 'cyan', 'yellowgreen', 'red', 'pink', 'indigo', 'green'])
     uid = np.unique(seg)
-    ovrl_gray = 255.*label2rgb(seg, img, clr[uid[uid > 0]], bg_label = 0)
+    ovrl_gray = 255.*label2rgb(seg, img, clr[uid[uid > 0] % (len(clr))], bg_label = 0)
     if not color: return np.uint8(ovrl_gray)
 
     seg_mask = np.tile(seg[:, :, None] > 0, [1,1,3])
@@ -135,6 +140,9 @@ def visSeg(img, seg, color = 0):
     imx[seg_neg] = img[seg_neg]
     return np.uint8(imx)
 
+def converArrToStr(in_arr):
+    return ','.join([str(x) for x in in_arr])
+
 def convertClusterStrToClusterList(cluster_str):
     if cluster_str[-1] == ';':
         cluster_str = cluster_str[:-1]
@@ -142,20 +150,22 @@ def convertClusterStrToClusterList(cluster_str):
     return cluster_list
 
 def convertClusterListToStr(shots):
-    return ';'.join([','.join([str(y) for y in shots[x]]) for x in range(len(shots))]) 
+    return ';'.join([','.join([str(y) for y in shots[x]]) for x in range(len(shots))]) + ';'
 
 def convertClusterArrToStr(cluster_ids):
     uid = np.unique(cluster_ids)
-    return ';'.join([','.join([str(y) for y in np.where(cluster_ids==x)[0]]) for x in uid])
+    return ';'.join([','.join([str(y) for y in np.where(cluster_ids==x)[0]]) for x in uid]) + ';'
 
 
 def convertClusterToJs(shots):
     if isinstance(shots, list):
+        num_shots = len(shots)
         cluster_str = convertClusterListToStr(shots)
     elif isinstance(shots, np.ndarray):
         cluster_str = convertClusterArrToStr(shots)
+        num_shots = shots.max()
     output_js = 'var shot_index_str="' + cluster_str + '";'
-    output_js += 'var shot_selection_str="' + ','.join('0'*len(shots)) + '";'
+    output_js += 'var shot_selection_str="' + ','.join('0'*num_shots) + '";'
     return output_js
 
 def convertShotToJs(self, shots, frame_rate = 1):
@@ -184,3 +194,10 @@ def copyFolder(input_folder, output_folder, file_ext='png', name_replace=[]):
             file_name = output_folder + file_name
             if not os.path.exists(file_name):
                 shutil.copyfile(ff, file_name)
+
+def getVideoViews(video_url):
+    tmp_file = 'db/views/v%s.json' % video_url
+    if not os.path.exists(tmp_file):
+        os.system('wget "https://www.googleapis.com/youtube/v3/videos?part=statistics&id=%s&key=%s" -O %s' %(video_url, secret.YOUTUBE_API_KEY, tmp_file))
+    data = json.load(open(tmp_file))
+    return data['items'][0]['statistics']['viewCount']

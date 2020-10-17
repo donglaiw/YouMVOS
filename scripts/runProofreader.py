@@ -15,19 +15,26 @@ if __name__ == "__main__":
     vtool = videoTool(job_id, job_num)
    
     fn = 'data/video'
+    fn = 'data/video_v0'
     fn = 'data/video_v1'
+    fn = 'data/video_v2'
     vopt=0;vv=['cooking']
-    #vopt=0;vv=['music_video']
-    #vv=[]
+    vopt=0;vv=['sports']
+    vopt=1;vv=['8GwmRn0_Y-Y']
+    vopt=1;vv=['enkRALcdPb0','xESsYrYxVDA']
+    vopt=1;vv=['1NIhv6fCqAU','yZLzLVAUJiU','MFNv-FJFGTg','Fhuc6qOGNPc']
+    vopt=0;vv=['howto']
     #fn = 'data/video_v0';vv=[]
 
     vtool.data.setInputVideoJson(fn + '.json')
 
 
     for video_name in vtool.data.video_all_name:
-        # Set up the web proofreading for shot detection and classification
         video_genre = video_name[:video_name.rfind('/')]
         video_url = video_name[video_name.rfind('/')+1:]
+
+        if video_url in ['F4tHL8reNCs','KYniUCGPGLs','dfToHzOmwdI','qVMW_1aZXRk','0oPa3GJJDDA','j2C8MkY7Co8']:
+            continue
         if len(vv) > 0 :
             if vopt == 0:
                 if video_genre not in vv:
@@ -36,34 +43,56 @@ if __name__ == "__main__":
                 if video_url not in vv:
                     continue
         vtool.data.setVideoInfo(video_name)
-        print('process video: ', video_name)
+        print(video_name)
 
+        # 1. Set up the web proofreading for shot detection and classification
         if opt == '0':
             # Prepage images
-            vtool.processor.copyFrames(vtool.data.FRAME_NAME.format(video_name, '_ds'), frame_downsample = vtool.video_frame_size[1]//320)
+            frame_size = vtool.processor.frameSize()
+            frame_template = vtool.data.FRAME_NAME_DS.format(video_name)
+            vtool.processor.frameCopy(frame_template, frame_downsample = frame_size[1]//320)
+            vtool.visualizer.visClipGif(os.path.dirname(frame_template), frame_num = 20)
+        elif opt == '0.01':
+            #frame_template = vtool.data.PROOFREADER_SEG.format(video_name, 'refine_')
+            frame_template = vtool.data.PROOFREADER_SEG.format(video_name, 'overlay_')
+            vtool.visualizer.visClipGif(os.path.dirname(frame_template), frame_num = 20, frame_type='seg')
         elif opt == '0.1':
             # Generate htmls/js
-            #vtool.webProofreadFolder()
-            vtool.setRedo(True)
+            vtool.proofreader.webProofreadFolder()
+            #vtool.setRedo(True)
             #vtool.webProofreadShot()
             #vtool.webProofreadSeg(input_txt ='shot_all')
             vtool.proofreader.webProofreadCluster()
 
-        # Set up desktop (VAST) proofreading
+        # 2. Set up desktop (VAST) proofreading
         elif opt == '1': # copy video info
             file_in = 'data/video_v1.json'
             folder_out = vtool.data.FOLDER_VAST
             shutil.copy(file_in, folder_out)
         elif opt == '1.1':
             # Prepage images
-            vtool.processor.copyFrames(vtool.data.PROCESSOR_VAST %(video_genre, video_url) + 'im/')
+            vtool.processor.frameCopy(vtool.data.FRAME_NAME_VAST.format(video_name))
         elif opt == '1.2':
             # Generate shot_bd.vsvi files for VAST
             #vtool.setRedo(True)
             #vtool.proofreader.vastProofreadSeg('all') # all frames
-            if video_url in ['3nUKwvFsjA4']:
-                continue
-            vtool.proofreader.vastProofreadSeg('cluster_selected_list_first') # only first frame per shot/cluster
+            frame_ids='' # all frames
+            frame_ids = 'cluster_selected_list_min' 
+            if video_url in ['G2AvRfxgpL4', 'zl7A-Vbe5N8','o78y1264dD8','jm2r5xzYx-A','016LXFHpFCk','2O7K-8G2nwU','AbBe0MjtN1I']:
+                frame_ids = 'shot_min' 
+            elif video_url in ['X7bj_LUIY7Y','2fdp8SVOSF4','3opTwpiCZ6c']:
+                frame_ids = 'cluster_selected_list_mid' 
+            else:
+            #['-kaaXz4IgrA','nd40lIYtQmA','4rp2aLQl7vg','tG-IGNvfrg8','x04jgjQ_hLI','NzYtFLpJrQU','cZy6sByBHY0','GVdOB4nA7eI','_6VeZAZdff0','f3CBJLAneCA']:
+                frame_ids = 'cluster_selected_list_min' 
+
+            vtool.proofreader.vastProofreadSeg(frame_ids) # only first frame per shot/cluster
+        elif opt == '1.3':
+            # count number of frames to work on for task assignment
+            #frame_ids = 'cluster_selected_list_min' 
+            #frame_ids = vtool.data.getFrameIndex(frame_ids)
+            #print(len(frame_ids))
+            pass
         
         # on hp03: copy files: hp03 -> middle/share
         elif opt == '2':

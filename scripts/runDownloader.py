@@ -1,7 +1,6 @@
 import os,sys,shutil
-import json
-from vidtool import videoDownloader
-from vidtool import videoUtil as vutil
+from vidtool import videoTool
+import numpy as np
 
 if __name__ == "__main__":
     opt = sys.argv[1]
@@ -11,37 +10,67 @@ if __name__ == "__main__":
         job_id = int(sys.argv[2])
         job_num = int(sys.argv[3])
 
-    param = json.load(open('data/param.json'))
+    vtool = videoTool(job_id, job_num)
 
-    vd = videoDownloader(job_id, job_num)
-    data_folder = param['DATA_FOLDER']
-    web_folder = param['WEB_FOLDER']
-    share_folder = param['SHARE_FOLDER']
-    lib_ffmpeg = param['LIB_FFMPEG']
-
-    vd.setFolders(data_folder, web_folder, share_folder)
-    fn = 'data/video_cooking'
-    fn = 'data/video'
-    fn = 'data/video_v0'
     fn = 'data/video_v1'
-    #vd.setInputVideoJson(fn + '.json')
-    vd.setInputVideoTxt(fn + '.txt')
+    fn = 'data/video_v2'
+    fn = 'data/video_v0'
+    fn = 'data/video'
+    
+    if opt[0] in ['1']:
+        vtool.data.setInputVideoJson(fn + '.json')
+    else:
+        vtool.data.setInputVideoTxt(fn + '.txt')
 
-    for vid,video_name in enumerate(vd.video_all_name[job_id::job_num]):
+    stat = np.zeros(len(vtool.data.video_all_name[job_id::job_num]), int)
+
+    for vid,video_name in enumerate(vtool.data.video_all_name[job_id::job_num]):
         print('process video: ', video_name)
-        vd.setVideoInfo(video_name)
+        vtool.data.setVideoInfo(video_name)
 
-        if opt == '0':
-            # Download the mp4
-            vd.getVideoMP4()
-        elif opt == '0.1':
-            # Check video size
-            vutil.checkVideoSize(vd.getVideoPath())
-        elif opt == '0.2':
-            # Extract frames
-            vd.getVideoFrames(lib_ffmpeg)
-        elif opt == '0.3':
-            # Gather video information: txt -> json
-            if vid ==0:
-                vutil.VideoTxtToJson(fn + '.txt', fn + '.json', data_folder, data_folder)
-            break;
+        if opt[0] == '0':
+            if opt == '0':
+                # Download the mp4
+                vtool.downloader.downloadVideoMP4()
+            elif opt == '0.1':
+                # Check video size
+                vtool.util.checkVideoSize(vtool.downloader.getVideoPath())
+            elif opt == '0.2':
+                # Extract frames
+                vtool.downloader.extractVideoFrames()
+            elif opt == '0.3':
+                # Gather video information: txt -> json
+                if vid ==0:
+                    vtool.util.VideoTxtToJson(fn + '.txt', fn + '.json', vtool.data.FOLDER_DOWNLOAD, vtool.data.FOLDER_DOWNLOAD)
+                break;
+            elif opt == '0.31': # generate js param for visualization file
+                vtool.util.VideoTxtToJs(fn + '.txt', vtool.data.FOLDER_WEB + 'js/%s.js' % fn[fn.rfind('/')+1:])
+                break
+        elif opt[0] == '1':
+            if opt == '1': # sanity check for the number of frames
+                t1 = vtool.data.video_all_info[video_name]['fps'] * vtool.data.video_duration  
+                t2 = vtool.data.video_frame_num
+                if np.abs(t1-t2)>4:
+                    print(t1,t2)
+            elif opt == '1.1': # get count statistics
+                video_url = video_name[video_name.rfind('/')+1:]
+                stat[vid] = vtool.util.getVideoViews(video_url)
+            elif opt == '1.2': # get length
+                stat[vid] = vtool.data.video_duration
+            elif opt == '1.3': # num shots
+                fn = vtool.data.FRAME_ROOT.format(video_name) + 'shot.txt'
+                if os.path.exists(fn):
+                    stat[vid] = np.loadtxt(fn).shape[0]
+
+            elif opt == '1.4': # fps
+                stat[vid] = int(np.round(vtool.data.video_all_info[video_name]['fps']))
+                if stat[vid] == 27:
+                    import pdb; pdb.set_trace()
+
+
+        if vid == len(stat)-1:
+            print(stat.mean())
+            print(stat[stat>0].mean())
+            if opt == '1.4':
+                ui, uc = np.unique(stat, return_counts=True)
+                print(ui,uc)

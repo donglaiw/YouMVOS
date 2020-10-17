@@ -1,9 +1,14 @@
 import numpy as np
+import os
+from glob import glob
+from imageio import imread
+from skimage.measure import label
 
 
 class shotDetection(object):
-    def __init__(self, stat_folder):
+    def __init__(self, stat_folder, image_template = 'frame/image_%05d.png'):
         self.stat_folder = stat_folder
+        self.image_template = image_template
 
 
     # 1. Shot detection
@@ -33,23 +38,31 @@ class shotDetection(object):
         do_diff = not os.path.exists(output_file_diff)
         if do_max or do_diff:
             print('compute max/diff')
+            frame_names = sorted(glob(os.path.dirname(self.stat_folder + self.image_template) + '/*.png'))
+            frame_num = len(frame_names)
+            if frame_num == 0:
+                raise ValueError('No images: %s' % (self.stat_folder + self.image_template))
             # not using the last frame
-            frame_range = self.getKeyframeIndex(-1, frame_rate = 1)[:-1] 
-            output_diff = np.zeros(len(frame_range), int)
+            num_per_job = (frame_num + job_num - 1) // job_num
+            # not using the last frame
+            frame_range = range(job_id * num_per_job, min((job_id + 1) * num_per_job, frame_num)-1)
+            frame_num_todo = len(frame_range)
+
+            output_diff = np.zeros(frame_num_todo, int)
             # if last job
-            if frame_range[-1] == self.video_frame_num-2:
-                output_max = np.zeros(len(frame_range)+1, int)
+            if frame_range[-1] == frame_num-2:
+                output_max = np.zeros(frame_num_todo + 1, int)
             else:
-                output_max = np.zeros(len(frame_range), int)
-            frame_current = self.getFrame(frame_range[0])[::frame_downsample, ::frame_downsample].astype(float)
+                output_max = np.zeros(frame_num_todo, int)
+            frame_current = imread(frame_names[frame_range[0]])[::frame_downsample, ::frame_downsample].astype(float)
 
             for i, frame_id in enumerate(frame_range):
                 output_max[i] = frame_current.max()
-                frame_next = self.getFrame(frame_id+1)[::frame_downsample, ::frame_downsample].astype(float)
+                frame_next = imread(frame_names[frame_id+1])[::frame_downsample, ::frame_downsample].astype(float)
                 output_diff[i] = np.abs(frame_current - frame_next).mean()
                 frame_current[:] = frame_next
 
-            if frame_range[-1] == self.video_frame_num-2:
+            if frame_range[-1] == frame_num-2:
                 output_max[-1] = frame_next.max()
 
             np.savetxt(output_file_max, output_max, '%d')
