@@ -9,4 +9,3 @@ LOG
 data/secret.py
 *.egg-info
 dist/
-scripts/T_*.py

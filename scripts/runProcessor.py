@@ -98,13 +98,6 @@ if __name__ == "__main__":
             vtool.processor.segSTM(frame_ids = frame_ids, cmd_file = cmd_file)
             import pdb; pdb.set_trace()
 
-        elif opt == '2.1': # stm display
-            if vtool.data.video_url in ['RB-RcX5DS5A','iS1g8G_njx8']:
-                continue
-            if vtool.data.video_url not in ['RBumgq5yVrA']:
-                continue
-            vtool.visualizer.visSegPng(output_prefix='stm_', frame_ids = 'shot_all')
-
         elif opt == '2.11': # check stm size
             if vtool.data.video_url in ['RB-RcX5DS5A','JGwWNGJdvx8','iS1g8G_njx8','RBumgq5yVrA','bnVUHWCynig']:
                 continue

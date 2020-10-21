@@ -9,6 +9,12 @@ import numpy as np
 import shutil
 from data import secret
 
+def vast2Seg(seg):
+    # can't be more than 255 objects...
+    if seg.ndim==2:
+        return seg 
+    else:
+        return seg[:,:,2]
 
 ## video-related function
 def getVideoInfo(video_url):
@@ -139,6 +145,13 @@ def visSeg(img, seg, color = 0):
     imx[seg_mask] = ovrl_gray[seg_mask]
     imx[seg_neg] = img[seg_neg]
     return np.uint8(imx)
+
+def converListToJsArr(in_list):
+    out = '['
+    for ll in in_list:
+        out += '[' + ll[:-1] + '],'
+    out = out[:-1] + '];'
+    return out
 
 def converArrToStr(in_arr):
     return ','.join([str(x) for x in in_arr])

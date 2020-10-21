@@ -80,7 +80,7 @@ class videoVisualizer(object):
                 output[i] = im
             writegif(output_file, output, duration = frame_duration)
 
-    def visSegPng(self, image_template=None, mask_template=None, output_template=None, output_prefix='refine_', frame_ids=None, frame_downsample = 4, redo= False):
+    def visSegPng(self, image_template=None, mask_template=None, output_template=None, output_prefix='refine_', frame_ids=None, frame_downsample = 4, redo= False, mask_id_func = None):
         if image_template is None:
             image_template = self.data.FRAME_NAME.format(self.data.video_name, '_ds')
         if mask_template is None:
@@ -93,8 +93,11 @@ class videoVisualizer(object):
         vutil.mkdir(output_template, 'dir')
         for frame_id in frame_ids:
             output_name = output_template % frame_id
-            mask_name = mask_template % frame_id 
+            if mask_id_func is None:
+                mask_name = mask_template % frame_id 
+            else:
+                mask_name = mask_template % mask_id_func(frame_id) 
             if os.path.exists(mask_name) and (redo or not os.path.exists(output_name)):
                 im = self.data.getFrameImage(frame_id)[::frame_downsample, ::frame_downsample]
-                seg = imageio.imread(mask_name)[::frame_downsample, ::frame_downsample]
+                seg = vutil.vast2Seg(imageio.imread(mask_name)[::frame_downsample, ::frame_downsample])
                 imageio.imwrite(output_name, vutil.visSeg(im, seg))

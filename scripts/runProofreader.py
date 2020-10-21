@@ -3,6 +3,7 @@ import shutil,glob
 import json
 from vidtool import videoTool
 import numpy as np
+from glob import glob
 
 if __name__ == "__main__":
     opt = sys.argv[1]
@@ -14,16 +15,18 @@ if __name__ == "__main__":
 
     vtool = videoTool(job_id, job_num)
    
-    fn = 'data/video'
     fn = 'data/video_v0'
+    video_done = vtool.util.readtxt(fn + '.txt')
+    video_done = [x[:x.find(',')] for x in video_done]
     fn = 'data/video_v1'
     fn = 'data/video_v2'
+    fn = 'data/video'
     vopt=0;vv=['cooking']
     vopt=0;vv=['sports']
     vopt=1;vv=['8GwmRn0_Y-Y']
     vopt=1;vv=['enkRALcdPb0','xESsYrYxVDA']
     vopt=1;vv=['1NIhv6fCqAU','yZLzLVAUJiU','MFNv-FJFGTg','Fhuc6qOGNPc']
-    vopt=0;vv=['howto']
+    vopt=0;vv=['music_video']
     #fn = 'data/video_v0';vv=[]
 
     vtool.data.setInputVideoJson(fn + '.json')
@@ -33,7 +36,7 @@ if __name__ == "__main__":
         video_genre = video_name[:video_name.rfind('/')]
         video_url = video_name[video_name.rfind('/')+1:]
 
-        if video_url in ['F4tHL8reNCs','KYniUCGPGLs','dfToHzOmwdI','qVMW_1aZXRk','0oPa3GJJDDA','j2C8MkY7Co8']:
+        if video_name in video_done:
             continue
         if len(vv) > 0 :
             if vopt == 0:
@@ -60,9 +63,9 @@ if __name__ == "__main__":
             # Generate htmls/js
             vtool.proofreader.webProofreadFolder()
             #vtool.setRedo(True)
-            #vtool.webProofreadShot()
-            #vtool.webProofreadSeg(input_txt ='shot_all')
-            vtool.proofreader.webProofreadCluster()
+            #vtool.proofreader.webProofreadShot()
+            #vtool.proofreader.webProofreadSeg(input_txt ='shot_all')
+            #vtool.proofreader.webProofreadCluster()
 
         # 2. Set up desktop (VAST) proofreading
         elif opt == '1': # copy video info
@@ -93,6 +96,57 @@ if __name__ == "__main__":
             #frame_ids = vtool.data.getFrameIndex(frame_ids)
             #print(len(frame_ids))
             pass
+
+        # round 2
+        elif opt[0] == '4': # manual mask display
+            # movie_trailer
+            #fn = '/seg_all_out/';frame_ids = 'all'; 
+            #mask_id_func = lambda x: (x-1)/vtool.data.video_frame_rate
+            mask_id_func = None 
+            frame_ids = 'cluster_selected_list_min' 
+            fn = 'seg_shot_bd';
+            if video_genre in ['music_video']:
+                frame_ids = 'shot_min'
+            if video_url in ['iS1g8G_njx8']:
+                frame_ids = 'cluster_selected_list_min' 
+
+            if opt == '4': # manual mask display
+                mask_template = vtool.data.FOLDER_DOWNLOAD + video_name + '/' + fn + '/' 
+                mask_name = sorted(glob(mask_template + '*.png'))
+                if len(mask_name) == 0:
+                    print('no seg')
+                    continue
+                num_pad = len(mask_name[-1][mask_name[-1].rfind('_s')+2:mask_name[-1].rfind('.')])
+                mask_template = mask_template + '_s%0'+str(num_pad) + 'd.png'
+                if video_genre in ['music_video']:
+                    if video_url in ['JGwWNGJdvx8']:
+                        shot_txt = np.loadtxt(vtool.data.FRAME_ROOT.format(video_name) + 'shot.txt').astype(int)
+                        frame_ids = 1+np.unique(shot_txt[:])
+                    else:
+                        vsvi = vtool.util.readtxt(vtool.data.PROCESSOR_VAST.format(video_name) + 'im_shot_bd.vsvi')
+                        frame_ids = np.array([int(x) for x in vsvi[21][vsvi[21].find(':')+3:-3].split(',')])
+                    # all frames
+                    #mask_id_func = lambda x: (x-1)/vtool.data.video_frame_rate
+                    # shot_bd frames
+                    mask_id_func = lambda x: np.where(frame_ids == x)[0]
+
+                vtool.visualizer.visSegPng(output_prefix='manual_', frame_ids = frame_ids, mask_template = mask_template, mask_id_func=mask_id_func)
+            elif opt == '4.1': # seg stat
+                #vtool.setRedo(True)
+                vtool.proofreader.vastProofreadSegStat(seg_folder = fn)
+            elif opt == '4.11': # seg stat to character
+                #vtool.setRedo(True)
+                video_names = [x for x in vtool.data.video_all_name if video_genre in x]
+                vtool.proofreader.webProofreadCharacter(video_names, seg_folder = fn)
+
+            elif opt == '4.2': # stm mask display
+                if vtool.data.video_url in ['RB-RcX5DS5A','iS1g8G_njx8']:
+                    continue
+                if vtool.data.video_url not in ['RBumgq5yVrA']:
+                    continue
+                vtool.visualizer.visSegPng(output_prefix='stm_', frame_ids = 'shot_all')
+
+
         
         # on hp03: copy files: hp03 -> middle/share
         elif opt == '2':
@@ -126,18 +180,16 @@ if __name__ == "__main__":
                 ll = len(glob.glob(Di + '/*.png'))
                 if ll == 0:
                     print(Di, ll)
-        # on web server: copy files: middle/share -> web
-        elif opt == '3':
-            # refinement for display 
+        elif opt == '2.2':
+            # on web server: copy files: middle/share -> web
             Di = vtool.video_share_folder % 'seg_ds'
             Do = vtool.video_web_folder % 'seg_ds'
             vutil.copyFolder(Di, Do, frame_downsample=2)
-        elif opt == '3.1':
-            # refinement for display 
+        elif opt == '2.3':
             Di = (vtool.video_share_folder % '') + 'refined_seg/'
             Do = vtool.video_data_folder + 'refined_seg/'
             vutil.copyFolder(Di, Do)
-        elif opt == '3.2':
+        elif opt == '2.4':
             # rename names
             Do = vtool.video_data_folder + 'refined_seg/'
             fns = sorted(glob.glob(Do + '*.png'))[::-1]

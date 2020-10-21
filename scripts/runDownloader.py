@@ -16,6 +16,7 @@ if __name__ == "__main__":
     fn = 'data/video_v2'
     fn = 'data/video_v0'
     fn = 'data/video'
+    vopt=0;vv=['movie_trailer']
     
     if opt[0] in ['1']:
         vtool.data.setInputVideoJson(fn + '.json')
@@ -25,7 +26,17 @@ if __name__ == "__main__":
     stat = np.zeros(len(vtool.data.video_all_name[job_id::job_num]), int)
 
     for vid,video_name in enumerate(vtool.data.video_all_name[job_id::job_num]):
-        print('process video: ', video_name)
+        video_genre = video_name[:video_name.rfind('/')]
+        video_url = video_name[video_name.rfind('/')+1:]
+        if len(vv) > 0 :
+            if vopt == 0:
+                if video_genre not in vv:
+                    continue
+            elif vopt == 1:
+                if video_url not in vv:
+                    continue
+
+        print(video_name)
         vtool.data.setVideoInfo(video_name)
 
         if opt[0] == '0':
@@ -66,11 +77,15 @@ if __name__ == "__main__":
                 stat[vid] = int(np.round(vtool.data.video_all_info[video_name]['fps']))
                 if stat[vid] == 27:
                     import pdb; pdb.set_trace()
+            elif opt == '1.5': # number of character
+                stat[vid] = len(vtool.util.readtxt(vtool.data.FRAME_ROOT.format(video_name) + '/seg_all_out.txt'))
 
 
-        if vid == len(stat)-1:
-            print(stat.mean())
-            print(stat[stat>0].mean())
-            if opt == '1.4':
-                ui, uc = np.unique(stat, return_counts=True)
-                print(ui,uc)
+        print(stat.mean())
+        print(stat[stat>0].mean())
+        if opt in ['1.4']:
+            ui, uc = np.unique(stat, return_counts=True)
+            print(ui,uc)
+        if opt in ['1.5']:
+            for x in stat[stat>0]:
+                print(x)

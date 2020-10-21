@@ -2,9 +2,10 @@
 class videoParam(object):
     def __init__(self):
         # folder path
-        self.FOLDER_DOWNLOAD = "/n/pfister_lab2/Lab/vcg_natural/youtubeE-vis/"
+        self.FOLDER_DOWNLOAD = "/n/pfister_lab2/Lab/vcg_natural/YouTop200/"
         # for web annotation
         self.FOLDER_WEB = "/n/boslfs02/LABS/lichtman_lab/glichtman/public/vcg/youtop-vis/youtube/"
+        self.FOLDER_WEB = "/n/pfister_lab2/Lab/public/YouTop200/"
         # for desktop annotation
         self.FOLDER_VAST = "/n/boslfs/LABS/lichtman_lab/Donglai/youtop/share/"
 

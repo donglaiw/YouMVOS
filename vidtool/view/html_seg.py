@@ -18,17 +18,16 @@ Mask prefix: <textarea id="prefix" cols=50 rows=1></textarea> (e.g. refine_)
 var shot_start = [0];
 var shot_selection = [0];
 var frame_folder = "%s";
-var mask_folder = "%s";
-var mask_prefix = "%s";
+var seg_folder = "%s";
+var seg_prefix = "%s";
 
-var pid=parseInt();
 // get prefix from url
-var mask_prefix_url = getUrlParam('pref');
-if (mask_prefix_url.length > 0){
-    mask_prefix = mask_prefix_url;
+var seg_prefix_url = getUrlParam('pref');
+if (seg_prefix_url.length > 0){
+    seg_prefix = seg_prefix_url;
 }
 
-$("#prefix").val(mask_prefix)
+$("#prefix").val(seg_prefix)
 var video_name = "%s";
 var overlay_id = [%s];
 var genre_name = "./";
@@ -54,7 +53,7 @@ function getIndex(i){
     return 1 + (i * fps);
 }
 function getMaskName(i){
-    var fn = mask_folder + video_name + "/" + mask_prefix + printf5d(getIndex(i)) + '.png';
+    var fn = seg_folder + video_name + "/" + seg_prefix + printf5d(getIndex(i)) + '.png';
     return fn;
 }
 
@@ -101,7 +100,7 @@ function update_display(){
         out += "</td></tr>"
     }
     out += "</tbody>"
-    out += "<table>"
+    out += "</table>"
     $("#img").html(out)
 
     $(".shot_sel").click(function() {
@@ -113,11 +112,11 @@ function update_display(){
        
     $(".mask").click(function() {
         var color = getNextColor($(this)[0].style.backgroundColor, color_name_seg);
-        var mask_id = parseInt($(this)[0].id.substr(1))
-        if(color=="red" && !bad_seg.includes(mask_id)){
-           bad_seg.push(mask_id) 
+        var seg_id = parseInt($(this)[0].id.substr(1))
+        if(color=="red" && !bad_seg.includes(seg_id)){
+           bad_seg.push(seg_id) 
         }else{
-           bad_seg = bad_seg.filter(function(value, index, arr){ return value != mask_id;});
+           bad_seg = bad_seg.filter(function(value, index, arr){ return value != seg_id;});
         }
         $(this)[0].style.backgroundColor = color;
     });
@@ -136,7 +135,7 @@ $("#shot").change(function(){
 });
 
 $("#prefix").change(function(){
-    mask_prefix = $(this).val();
+    seg_prefix = $(this).val();
     update_display();
 });
 
