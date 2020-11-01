@@ -2,11 +2,13 @@
 class videoParam(object):
     def __init__(self):
         # folder path
-        self.FOLDER_DOWNLOAD = "/n/pfister_lab2/Lab/vcg_natural/youtubeE-vis/"
+        self.FOLDER_DOWNLOAD = "/n/pfister_lab2/Lab/vcg_natural/YouTop200/"
         # for web annotation
         self.FOLDER_WEB = "/n/boslfs02/LABS/lichtman_lab/glichtman/public/vcg/youtop-vis/youtube/"
+        #self.FOLDER_WEB = "/n/pfister_lab2/Lab/public/YouTop200/"
         # for desktop annotation
-        self.FOLDER_VAST = "/n/boslfs/LABS/lichtman_lab/Donglai/youtop/share/"
+        #self.FOLDER_VAST = "/n/boslfs/LABS/lichtman_lab/Donglai/youtop/share/"
+        self.FOLDER_VAST = "/n/pfister_lab2/Lab/donglai/YouTop200/db/share/"
 
         # library path
         self.LIB_DETECTRON2 = "/n/pfister_lab2/Lab/donglai/lib/pipeline/detectron2/"
@@ -16,6 +18,7 @@ class videoParam(object):
         # processor filename and path
         self.PROCESSOR_DETECTON2 = self.FOLDER_VAST + "{}/seg/seg_%05d.png" # video name
         self.PROCESSOR_STM = self.FOLDER_VAST + "{}/seg_prop/seg_%05d.png" # video name
+        self.PROCESSOR_STM2 = self.FOLDER_VAST + "{}/seg_prop_out/seg_%05d.png" # video name
         self.PROCESSOR_VAST = self.FOLDER_VAST + "{}/" # video name, folder name
 
         # frame filename and path
