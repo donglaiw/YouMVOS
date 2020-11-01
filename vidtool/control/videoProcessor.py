@@ -26,13 +26,14 @@ class videoProcessor(object):
         vutil.mkdir(output_folder)
         if frame_rate < 0:
             frame_rate = self.data.video_frame_rate
-            if isinstance(frame_ids, str): 
-                frame_ids = self.data.getFrameIndex(frame_ids)
+        if isinstance(frame_ids, str): 
+            frame_ids = self.data.getFrameIndex(frame_ids, frame_rate)
 
         for frame_id in frame_ids[self.job_id :: self.job_num]:
             frame_name_in = self.data.getFrameName(frame_id)
             frame_name_out = output_folder % frame_id
             if self.data.redo or not os.path.exists(frame_name_out):
+                print('do: ',frame_name_out)
                 if frame_downsample != 1:
                     output = imageio.imread(frame_name_in)[::frame_downsample, ::frame_downsample]
                     imageio.imwrite(frame_name_out, output)
@@ -87,7 +88,33 @@ class videoProcessor(object):
                 self.lib_frame_cluster.setInfo(frame_names, self.data.video_frame_rate)
             cluster_ids = self.lib_frame_cluster.getClusterId(thres_sim, thres_small, metric)
             vutil.writetxt(output_file, vutil.convertClusterToJs(cluster_ids))
-            
+    
+    def computeBlackFrame(self, frame_num = 30, thres_black = 5, frame_folder = None, output_file = None):
+        if frame_folder is None:
+            frame_folder = self.data.getFrameName(-2)
+        if output_file is None:
+            output_file = self.data.FOLDER_DOWNLOAD + self.data.video_name + '/black_frame.txt'
+
+        if not os.path.exists(output_file):
+            vutil.mkdir(output_file, 'dir')
+            frame_ids = self.data.getFrameIndex('uniform', frame_num = frame_num)
+
+            output = -np.ones([len(frame_ids), 4], int)
+            for frame_id in frame_ids:
+                frame_name = vtool.data.FRAME_NAME.format(self.data.video_name, '') % frame_id
+                if os.path.exists(frame_name):
+                    tmp = imageio.imread(frame_name)
+                    row_black = np.where(tmp.max(axis=1) > thres_black)[0]
+                    if len(row_black)>0:
+                        output[frame_id, 0] = row_black[0]
+                        output[frame_id, 2] = row_black[-1]
+                    col_black = np.where(tmp.max(axis=0) > thres_black)[0]
+                    if len(col_black)>0:
+                        output[frame_id, 1] = col_black[0]
+                        output[frame_id, 3] = col_black[-1]
+
+            np.savetxt(output_file, output, '%d')
+
     # 2. Detectron2 for 2D instance segmentation
     def segDetectron2(self, frame_ids = 'shot', \
                              image_template = None, output_template = None, \
@@ -115,47 +142,64 @@ class videoProcessor(object):
 
     # 3. STM for video object segmentation
     def segSTM(self, frame_ids = 'shot_all_list', frame_ids_file = None, \
-                             image_template = None, mask_folder = None, output_template = None, \
-                             cmd_file = None):
+                             image_template = None, mask_folder = None, mask_index_factor = -1, output_template = None, \
+                             cmd_file = None, mask_step_output = -1, stm_anchor_num = -1):
+        # option 1: each mask is the first index in the frame_ids 
+        # option 2: each mask index is a downsample version of frame_ids 
         # https://github.com/donglaiw/STM
         # frame_ids: list of arrays (cluster result) or Nx2 matrix (shot result)  
         # mask_folder: can have different indexing system (so long it's indexed)
 
         STM_folder = self.data.LIB_STM
+        # sample rate: need to be divisible
+        stm_step = self.data.video_frame_step
+
         if isinstance(frame_ids, str):
             option = frame_ids
-            if 'shot' in option:
-                frame_ids = self.data.getFrameIndex(option, input_file = frame_ids_file)
-                frame_ids_str = vutil.convertClusterListToStr(frame_ids)
-            elif 'cluster' in frame_ids:
-                frame_ids = self.data.loadClusterJs(option=option)
-                frame_ids_str = vutil.converArrToStr(frame_ids)
+            if '_out' in option:
+                if 'shot' in option:
+                    frame_ids = self.data.getFrameIndex(option, input_file = '_shot_out', frame_rate = stm_step)
+                    frame_ids_str = vutil.convertClusterListToStr(frame_ids)
+                elif 'cluster' in frame_ids:
+                    frame_ids = self.data.loadClusterJs(option=option)
+                    frame_ids_str = vutil.convertClusterListToStr(frame_ids)
+                else:
+                    raise ValueError('unknown frame_ids: %s' % frame_ids)
+                # input mask step
+                mask_step_input = self.data.video_frame_rate
+                # prop per frame_step
+                if mask_step_output < 0:
+                    mask_step_output = self.data.video_frame_step
             else:
-                raise ValueError('unknown frame_ids: %s' % frame_ids)
+                # no need
+                mask_step_input = 0
+                # prop per sec
+                if mask_step_output < 0:
+                    mask_step_output = self.data.video_frame_rate
+                if 'shot' in option:
+                    frame_ids = self.data.getFrameIndex(option, input_file = frame_ids_file)
+                    frame_ids_str = vutil.convertClusterListToStr(frame_ids)
+                elif 'cluster' in frame_ids:
+                    frame_ids = self.data.loadClusterJs(option=option)
+                    frame_ids_str = vutil.convertClusterListToStr(frame_ids)
+                else:
+                    raise ValueError('unknown frame_ids: %s' % frame_ids)
 
         if image_template is None:
             image_template = self.data.getFrameName(-1)
         if mask_folder is None:
-            mask_folder =  self.data.PROCESSOR_DETECTON2 % self.data.video_name
+            mask_folder =  self.data.PROCESSOR_VAST.format(self.data.video_name) + 'seg_shot_bd/'
         if output_template is None:
             output_template =  self.data.PROCESSOR_STM.format(self.data.video_name)
-
 
         masks = glob(mask_folder + '/*.png')
         if len(masks) == 0:
             print("%s has no mask to run." % mask_folder)
-            return
+            #return
         vutil.mkdir(output_template, 'dir')
-        # sample rate: need to be divisible
-        if self.data.video_frame_rate in [25,30]:
-            image_step = self.data.video_frame_rate // 5
-        elif self.data.video_frame_rate in [24]:
-            image_step = self.data.video_frame_rate // 6
-        else:
-            raise ValueError('unsuitable video frame rate for propagation: %d' % image_step)
 
-        cmd = 'python ' + STM_folder + 'demo_youtop.py --image-template %s  --mask-folder %s --output-template %s --input-index "%s" --input-fps %d --image-step %d --stm-height 480 --shot-chunk-len 250 --redo %d\n'
-        cmd = cmd % (image_template, mask_folder, output_template, frame_ids_str, self.data.video_frame_rate, image_step, self.data.redo)
+        cmd = 'python ' + STM_folder + 'demo_youtop.py --video-fps %d --image-template %s --image-cluster "%s" --mask-folder %s --mask-index-factor %d,%d --mask-index-factor-output %d,%d --mask-template-output %s --stm-step %d --stm-height 480 --stm-mem-len 150 --stm-anchor-num %d --redo %d\n'
+        cmd = cmd % (self.data.video_frame_rate, image_template, frame_ids_str, mask_folder, mask_step_input, self.data.FRAME_OFFSET, mask_step_output, self.data.FRAME_OFFSET, output_template, stm_step, stm_anchor_num, self.data.redo)
         if cmd_file is None:
             print(cmd)
         else:

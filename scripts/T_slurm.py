@@ -2,7 +2,7 @@ import sys
 
 opt = sys.argv[1]
 
-D0='/n/pfister_lab2/Lab/donglai/movie-vis/'
+D0='/n/pfister_lab2/Lab/donglai/YouTop200/'
 Do = 'db/slurm/'
 sa='source /n/pfister_lab2/Lab/donglai/lib/miniconda2/bin/activate '
 sa3='source /n/home04/donglai/miniconda3/bin/activate '
@@ -39,15 +39,27 @@ if opt =='0':
 elif opt =='1': 
     fn='yt'
     suf = ' \n'
-    num = 7;cn = 'scripts/runProofreader.py 0'
     num = 7;cn = 'scripts/runProcessor.py 0.2'
     num = 9;cn = 'scripts/runProcessor.py 0'
     num = 3;cn = 'scripts/runDownloader.py 0.2'
+    num = 7;cn = 'scripts/runProofreader.py 0'
+    num = 9;cn = 'scripts/T_release.py 0'
     
-    pp = 'seas_dgx1';tt='0-24:00'
+    #pp = 'seas_dgx1';tt='0-24:00'
     #pp = 'holyseasgpu';tt='0-24:00'
     cmd+=[sa3 + ' vis \n']
     cmd+=['ls;python '+D0+cn+' %d '+str(num)+suf]
+elif opt =='2': 
+    fn='ytg'
+    suf = ' \n'
+    num = 1;
+    do_gpu = True 
+    pp = 'seas_dgx1';tt='0-24:00'
+    mem = 40000
+    #pp = 'holyseasgpu';tt='0-24:00'
+    cmd += ['module load cuda/10.2.89-fasrc01 cudnn/7.6.5.32_cuda10.2-fasrc01 \n']
+    cmd += [sa3 + 'stm \n']
+    cmd += ['./db/run_stm.sh']
 
 
 pref=get_pref(mem, do_gpu, pp, tt)+"""

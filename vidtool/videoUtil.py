@@ -181,16 +181,18 @@ def convertClusterToJs(shots):
     output_js += 'var shot_selection_str="' + ','.join('0'*num_shots) + '";'
     return output_js
 
-def convertShotToJs(self, shots, frame_rate = 1):
+def convertShotToJs(shots, shots_sel = None, frame_rate = 1):
     # need consecutive numbers for easy editing
     # Take the ceil for the start frame.
     # Can be repeated due to frame_rate downsample
     if shots.ndim == 1:
-        shots = [(shots[0] + frame_rate - 1) // frame_rate]
+        shots = (shots + frame_rate - 1) // frame_rate
     else:
         shots = np.unique((shots[:, 0] + frame_rate - 1) // frame_rate)
     output_js = 'var shot_start_str="'+','.join([str(x) for x in shots])+'";'
-    output_js += 'var shot_selection_str="'+','.join([str(0) for x in shots])+'";'
+    if shots_sel is None:
+        shots_sel = np.zeros(len(shots), int) 
+    output_js += 'var shot_selection_str="'+','.join([str(x) for x in shots_sel])+'";'
     return output_js
 
 def copyFolder(input_folder, output_folder, file_ext='png', name_replace=[]):

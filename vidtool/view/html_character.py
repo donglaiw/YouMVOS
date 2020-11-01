@@ -18,12 +18,14 @@ function update_display(){
     var ind = '';
     var ind_step = 1;
     var video_id = 0;
+    var seg_pref='stm_'
 """
 
 html_character_body = """
     video_name = "%s";
     seg_info = %s;
     fps = %d;
+    seg_pref = "%s";
     out += "<tr><td>"+video_id+'. '+video_name+"</td><td colspan=" + num_img + ">images</td></tr>"
     for(var i = 0;i < seg_info.length; i ++){
         if( seg_info[i].length-1 < num_img){
@@ -37,7 +39,7 @@ html_character_body = """
         }
         out += '<tr><td>'+seg_info[i][0]+'</td>'
         for(var j = 0; j < ind.length; j ++){
-            fn = seg_folder + video_name + "/manual_"  + printf5d(1 + (ind[j] * fps)) + '.png';
+            fn = seg_folder + video_name + seg_pref + printf5d(1 + (ind[j] * fps)) + '.png';
             out += '<td><img height=100 src="'+fn+'">' 
             out += '</td>'
         }

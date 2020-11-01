@@ -18,16 +18,15 @@ class videoProofreader(object):
             os.chmod(folder_name + '/saved/', 0o777)
         vutil.mkdir(folder_name + '/test/')
 
-    def webProofreadShot(self, input_txt = None, frame_rate = -1):
+    def webProofreadShot(self, input_txt = None, suf='shot', frame_rate = -1):
         # Convert shot_txt into js and html
         if frame_rate < 0 :
             frame_rate = self.video_frame_rate
 
-        output_js = self.data.getJs('_shot')
+        output_js = self.data.getJs('_' + suf)
         if self.data.redo or not os.path.exists(output_js):
             print('do js')
-            import pdb; pdb.set_trace()
-            input_file = self.getTxt(input_txt, 'shot')
+            input_file = self.getTxt(input_txt, suf)
             shots = np.loadtxt(input_file).astype(int)
             output_var = self.convertShotArrToJs(shots, frame_rate)
             vutil.writetxt(output_js, output_var)
@@ -35,8 +34,41 @@ class videoProofreader(object):
         output_html = self.data.getHtml('_shot')
         if self.data.redo or not os.path.exists(output_html):
             print('do shot')
-            output = html_shot % ('../../../frame_ds/', self.video_name, (self.video_frame_num + self.video_frame_rate - 1) // self.video_frame_rate, self.video_frame_rate)
+            output = html_shot % ('../../../frame_ds/', self.data.video_name, (self.data.video_frame_num + self.data.video_frame_rate - 1) // self.data.video_frame_rate, self.data.video_frame_rate)
             vutil.writetxt(output_html, output)
+
+    def webProofreadShotSR(self, suf_in = '_shot', suf_out = '_shot_out', frame_rate_in = -1, frame_step = -1):
+        if frame_rate_in < 0:
+            frame_rate_in = self.data.video_frame_rate
+        if frame_step < 0:
+            frame_step = self.data.video_frame_step
+        # Convert shot.js into js and html
+        output_js = self.data.getJs(suf_out)
+        if self.data.redo or not os.path.exists(output_js):
+            shots, shots_sel = self.data.loadShotJs(shot_js=suf_in)
+
+            shots_v2 = shots * frame_step 
+            # use frame_diff to refine shot
+            frame_diff = np.loadtxt(self.data.getTxt(suf = 'rgb_diff')).astype(int)
+            # first element: f1-f0
+            rest = (-len(frame_diff)) % frame_step
+            frame_diff = np.hstack([frame_diff, np.zeros(rest,int)]).reshape(-1,frame_step).max(axis=1)
+            # match to shots_id, no need for last chunk
+            for i in range(len(shots)):
+                fid = shots_v2[i]
+                if fid == 0:
+                    continue
+                bid = np.argmax(frame_diff[fid-frame_step:fid])
+                shots_v2[i] = fid - frame_step + 1 + bid
+                
+            output_var = vutil.convertShotToJs(shots_v2, shots_sel)
+            vutil.writetxt(output_js, output_var)
+        output_html = self.data.getHtml(suf_out)
+        if self.data.redo or not os.path.exists(output_html):
+            print('do shot')
+            output = html_shot % ('../../../frame_ds/', self.data.video_name, (self.data.video_frame_num + frame_step - 1) // frame_step, frame_step, suf_out)
+            vutil.writetxt(output_html, output)
+
 
     def webProofreadCluster(self, input_txt = None, frame_rate = -1):
         # Convert shot_txt into js and html
@@ -60,10 +92,10 @@ class videoProofreader(object):
             output = html_cluster % ('../../../frame_ds/', self.data.video_name, (self.data.video_frame_num + self.data.video_frame_rate - 1) // self.data.video_frame_rate, self.data.video_frame_rate, self.data.FRAME_OFFSET)
             vutil.writetxt(output_html, output)
 
-    def webProofreadSeg(self, seg_prefix='refine_', input_txt = None, frame_rate = -1):
+    def webProofreadSeg(self, seg_prefix='refine_', seg_suffix='_cluster', input_txt = None, frame_rate = -1):
         # Convert shot_txt into js and html
         if frame_rate < 0 :
-            frame_rate = self.video_frame_rate
+            frame_rate = self.data.video_frame_rate
 
         output_html = self.data.getHtml('_seg')
         vutil.mkdir(output_html, 'dir')
@@ -74,13 +106,13 @@ class videoProofreader(object):
                 overlay_id = ','.join([str(int(x[x.rfind('_')+1:-4])) for x in overlay_files]) 
             elif '.txt' not in input_txt:
                 # load shot result
-                overlay_id = ','.join([str(x) for x in self.getKeyframeIndex(input_txt, frame_offset = 1)])
+                overlay_id = ','.join([str(x) for x in self.data.getFrameIndex(input_txt)])
             else:
                 overlay_id = vutil.readtxt(input_txt)[:-1]
-            output = html_seg % ('../../../frame_ds/', '../../../seg_ds/', seg_prefix, self.video_name, overlay_id, (self.video_frame_num + self.video_frame_rate - 1) // self.video_frame_rate, self.video_frame_rate)
+            output = html_seg % ('../../../frame_ds/', '../../../seg_ds/', self.data.video_name, overlay_id, self.data.video_frame_num, seg_prefix, seg_suffix, self.data.video_frame_rate)
             vutil.writetxt(output_html, output)
 
-    def webProofreadCharacter(self, video_names, seg_folder='seg_out'):
+    def webProofreadCharacter(self, video_names, seg_folder='seg_out', seg_pref='manual_'):
         # one page for many videos
         output_html = self.data.PROOFREADER_HTML_TEST % (self.data.video_genre, 'dsp_character', '')
         vutil.mkdir(output_html, 'dir')
@@ -89,9 +121,10 @@ class videoProofreader(object):
             for video_name in video_names:
                 self.data.setVideoInfo(video_name)
                 info_txt = self.data.FRAME_ROOT.format(self.data.video_name) + '/%s.txt' % (seg_folder)
-                info = vutil.readtxt(info_txt)
-                info_str = vutil.converListToJsArr(info)
-                output += html_character_body % (self.data.video_name, info_str, self.data.video_frame_rate)
+                if os.path.exists(info_txt):
+                    info = vutil.readtxt(info_txt)
+                    info_str = vutil.converListToJsArr(info)
+                    output += html_character_body % (self.data.video_name, info_str, self.data.video_frame_rate, seg_pref)
             output += html_character_footer
             vutil.writetxt(output_html, output)
 
@@ -108,6 +141,7 @@ class videoProofreader(object):
         vsvi_type = ['im', 'seg']
         vsvi_filename = ['image_%05d.png','seg_%05d.png']
         output_folder = self.data.PROCESSOR_VAST.format(self.data.video_name)
+        vutil.mkdir(output_folder)
         for vsvi_id in range(len(vsvi_type)):
             output_vsvi =  output_folder + '%s.vsvi' % (vsvi_type[vsvi_id] + frame_suf)
             if self.data.redo or not os.path.exists(output_vsvi):
@@ -119,20 +153,26 @@ class videoProofreader(object):
                                                    len(frame_ids), meta)
                 vutil.writetxt(output_vsvi, output)
 
-    def vastProofreadSegStat(self, seg_folder = 'seg_out'):
+    def vastProofreadSegStat(self, seg_folder = 'seg_out', seg_root = None):
         max_obj = 20
         output_txt = self.data.FRAME_ROOT.format(self.data.video_name) + '/%s.txt' %(seg_folder)
 
         if self.data.redo or not os.path.exists(output_txt):
-            mask_template = self.data.FOLDER_DOWNLOAD + self.data.video_name + '/%s/'%seg_folder
+            if seg_root is None:
+                seg_root = self.data.FOLDER_DOWNLOAD
+            mask_template =  seg_root + self.data.video_name + '/%s/'%seg_folder
             mask_names = sorted(glob(mask_template + '*.png'))
             k_ind = [None] * max_obj
             k_id = np.zeros(max_obj, int)
             for mask_name in mask_names:
-                mid = int(mask_name[mask_name.rfind('_s')+2:-4])
+                mid = mask_name[mask_name.rfind('/')+1:]
+                if '_s' in mid:
+                    mid = int(mid[mid.rfind('_s')+2:-4])
+                else:
+                    mid = int(mid[mid.rfind('_')+1:-4])
                 seg = vutil.vast2Seg(imageio.imread(mask_name))
                 uid = np.unique(seg)
-                print(uid)
+                #print(uid)
                 uid = uid[uid>0]
                 if len(uid) > 0:
                     for ui in uid:

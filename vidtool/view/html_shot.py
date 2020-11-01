@@ -29,7 +29,7 @@ function loadJs_cb(){
     $('#shot').val(shot_start_str)
     update_value(shot_start_str, shot_selection_str);
 }
-loadJs('_shot', loadJs_cb)
+loadJs('%s', loadJs_cb)
 
 
 function getImName(i){
