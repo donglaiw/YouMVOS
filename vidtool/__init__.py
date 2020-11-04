@@ -7,9 +7,7 @@ from . import videoUtil
 
 class videoTool(object):
     def __init__(self, job_id = 0, job_num = 1, redo = False):
-        self.job_id = job_id
-        self.job_num = job_num
-        self.data = videoData() 
+        self.data = videoData(job_id, job_num) 
         self.proofreader = videoProofreader(self.data)
         self.processor = videoProcessor(self.data)
         self.downloader = videoDownloader(self.data)
@@ -19,8 +17,8 @@ class videoTool(object):
     ####
     # Computation config
     def setSingleProcess(self):
-        self.job_id = 0
-        self.job_num = 1
+        self.data.job_id = 0
+        self.data.job_num = 1
 
     def setRedo(self, redo):
         self.data.redo = redo

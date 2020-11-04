@@ -8,7 +8,7 @@ from random import randrange
 import re
 
 class segRefinement(object):
-  def __init__(self, image_list, seg_list, colors = None, alpha_fade = 1, alpha_trans = 0.7, erode_ratio = 0.9, erode_iter = [3, 20]):
+  def __init__(self, image_list=[], seg_list=[], colors = None, alpha_fade = 1, alpha_trans = 0.7, erode_ratio = 0.9, erode_iter = [3, 20]):
     self.images = sorted(image_list)
     self.masks = sorted(seg_list)
     self.clr = np.array(['black', 'blue', 'yellow', 'darkorange', 'magenta', 'cyan', 'yellowgreen', 'red', 'pink', 'indigo', 'green']) if colors == None else colors

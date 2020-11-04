@@ -216,3 +216,13 @@ def getVideoViews(video_url):
         os.system('wget "https://www.googleapis.com/youtube/v3/videos?part=statistics&id=%s&key=%s" -O %s' %(video_url, secret.YOUTUBE_API_KEY, tmp_file))
     data = json.load(open(tmp_file))
     return data['items'][0]['statistics']['viewCount']
+
+def getVideoFrameStep(fps):
+    if fps in [25,30]:
+        fps = 5
+    elif fps in [24]:
+        fps = 4
+    elif fps in [27]:
+        fps = 3
+    return fps
+

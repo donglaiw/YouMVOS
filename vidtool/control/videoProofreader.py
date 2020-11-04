@@ -42,12 +42,12 @@ class videoProofreader(object):
             frame_rate_in = self.data.video_frame_rate
         if frame_step < 0:
             frame_step = self.data.video_frame_step
+        sr_ratio = frame_rate_in // frame_step
         # Convert shot.js into js and html
         output_js = self.data.getJs(suf_out)
         if self.data.redo or not os.path.exists(output_js):
             shots, shots_sel = self.data.loadShotJs(shot_js=suf_in)
-
-            shots_v2 = shots * frame_step 
+            shots_v2 = shots * sr_ratio 
             # use frame_diff to refine shot
             frame_diff = np.loadtxt(self.data.getTxt(suf = 'rgb_diff')).astype(int)
             # first element: f1-f0
@@ -58,8 +58,8 @@ class videoProofreader(object):
                 fid = shots_v2[i]
                 if fid == 0:
                     continue
-                bid = np.argmax(frame_diff[fid-frame_step:fid])
-                shots_v2[i] = fid - frame_step + 1 + bid
+                bid = np.argmax(frame_diff[fid-sr_ratio:fid])
+                shots_v2[i] = fid - sr_ratio + 1 + bid
                 
             output_var = vutil.convertShotToJs(shots_v2, shots_sel)
             vutil.writetxt(output_js, output_var)
@@ -128,28 +128,37 @@ class videoProofreader(object):
             output += html_character_footer
             vutil.writetxt(output_html, output)
 
-    def vastProofreadSeg(self, frame_ids = 0, frame_suf='', input_js = None):
+    def vastProofreadSeg(self, frame_ids = 0, vsvi_suf='', seg_suf='',mask_id_func=None, input_js = None, frame_ids_after=0):
         # Output im.vsvi and seg.vsvi for VAST-lite proofreading
         if isinstance(frame_ids, str):
             # frame_ids is the option
             frame_ids = self.data.getFrameIndex(frame_ids, input_file = input_js)
+        
+        frame_ids = frame_ids[frame_ids > frame_ids_after]
+        if mask_id_func is None:
+            seg_ids = frame_ids
+        else:
+            seg_ids = mask_id_func(frame_ids)
 
-        frame_ids_str = vutil.converArrToStr(frame_ids)
+        frame_ids_str = [vutil.converArrToStr(frame_ids), vutil.converArrToStr(seg_ids)]
         frame_size = np.array(self.data.getFrameImage(frame_ids[0]).shape)
 
         # output vsvi
-        vsvi_type = ['im', 'seg']
+        if seg_suf is None:
+            vsvi_type = ['im']
+        else:
+            vsvi_type = ['im', 'seg%s'%seg_suf]
         vsvi_filename = ['image_%05d.png','seg_%05d.png']
         output_folder = self.data.PROCESSOR_VAST.format(self.data.video_name)
         vutil.mkdir(output_folder)
         for vsvi_id in range(len(vsvi_type)):
-            output_vsvi =  output_folder + '%s.vsvi' % (vsvi_type[vsvi_id] + frame_suf)
+            output_vsvi =  output_folder + '%s.vsvi' % (vsvi_type[vsvi_id] + vsvi_suf)
             if self.data.redo or not os.path.exists(output_vsvi):
                 meta = "%s %s" % (self.data.video_name, vsvi_type[vsvi_id])
                 image_template = r'.\%s\%s' % (vsvi_type[vsvi_id], vsvi_filename[vsvi_id])
                 output = vsvi_seg % (meta, image_template, 0, \
                                                    image_template, frame_size[1], frame_size[0], \
-                                                   frame_ids_str, frame_size[1], frame_size[0], \
+                                                   frame_ids_str[vsvi_id], frame_size[1], frame_size[0], \
                                                    len(frame_ids), meta)
                 vutil.writetxt(output_vsvi, output)
 

@@ -8,9 +8,11 @@ from . import videoUtil as vutil
 from .videoParam import videoParam 
 
 class videoData(object):
-    def __init__(self, redo = False):
+    def __init__(self, job_id = 0, job_num = 1, redo = False):
         self.setParams()
 
+        self.job_id = job_id
+        self.job_num = job_num
         self.redo = redo
         self.video_all_info = None
         self.video_all_name = None
@@ -106,11 +108,17 @@ class videoData(object):
                         frame_ids_list[i] = frame_ids[range(shots[shot_id, 0], shots[shot_id, 1]+1)]
                     frame_ids = frame_ids_list
 
-                elif 'shot_selected' in option: 
+                elif 'shot_selected_arr' in option: 
                     # All frames in selected shots
+                    step = 1
+                    if 'every' in option:
+                        step = int(option[option.rfind('-')+1:])
                     frame_ids_list = []
                     for shot_id in np.where(shot_selection == 0)[0]:
-                        frame_ids_list += list(frame_ids[range(shots[shot_id, 0], shots[shot_id, 1]+1)])
+                        tmp = list(frame_ids[range(shots[shot_id, 0], shots[shot_id, 1]+1)])
+                        if step > 1:
+                            tmp = list(np.unique(tmp[::step] + tmp[-1:]))
+                        frame_ids_list += tmp 
                     frame_ids = np.array(frame_ids_list)
             elif 'cluster' in option:
                 if '_out' in option and input_file is None:
@@ -153,19 +161,22 @@ class videoData(object):
                 shot_ids = [sorted(x) for x in shot_ids]
             elif 'min' in option:
                 shot_ids = [min(x) for x in shot_ids]
-            if 'midA' in option:
+            elif 'midA' in option:
                 shot_ids = [list(np.array(x)[np.argsort(x)[len(x)//2:]]) +\
                             list(np.array(x)[np.argsort(x)[len(x)//2-1::-1]]) for x in shot_ids]
             elif 'mid' in option:
                 shot_ids = [x[np.argsort(x)[len(x)//2]] for x in shot_ids]
-            if 'maxA' in option:
+            elif 'maxA' in option:
                 shot_ids = [sorted(x, reverse=True) for x in shot_ids]
             elif 'max' in option:
                 shot_ids = [max(x) for x in shot_ids]
+            elif 'every' in option:
+                step = int(option[option.rfind('-')+1:])
+                shot_ids = [np.unique(x[::step]+x[-1:]) for x in shot_ids]
 
-        if 'cluster_selected_str' in option:
+        if '_str' in option:
             return vutil.convertClusterListToStr(shot_ids)
-        elif 'cluster_selected_arr' in option:
+        elif '_arr' in option:
             return [j for i in shot_ids for j in i]
         elif 'cluster_selected' in option:
             return shot_ids

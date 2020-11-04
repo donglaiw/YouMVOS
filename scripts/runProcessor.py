@@ -1,5 +1,6 @@
 import os,sys,shutil
 from glob import glob
+import numpy as np
 from vidtool import videoTool
 
 if __name__ == "__main__":
@@ -13,6 +14,7 @@ if __name__ == "__main__":
     vtool = videoTool(job_id, job_num)
 
     fn = 'data/video_v0'
+    fn = 'data/yt_train'
     video_done = vtool.util.readtxt(fn + '.txt')
     video_done = [x[:x.find(',')] for x in video_done]
 
@@ -24,21 +26,19 @@ if __name__ == "__main__":
     vopt=1;vv=['746NhRSrNOY']
     vopt=1;vv=['1NIhv6fCqAU','yZLzLVAUJiU','MFNv-FJFGTg','Fhuc6qOGNPc']
     vopt=0;vv=['education']
-    vopt=0;vv=['music_video']
     vopt=0;vv=['sports']
     vopt=0;vv=['cooking']
-    vopt=0;vv=['movie_trailer']
     vopt=0;vv=['howto']
-    vv=[]
-    #fn = 'data/video_v0';vv=[]
-
+    vopt=0;vv=['movie_trailer']
+    vopt=0;vv=['music_video']
+    fn = 'data/video_v0';vv=[]
     vtool.data.setInputVideoJson(fn + '.json')
     
     tmp_start = 0
-    for vid,video_name in enumerate(vtool.data.video_all_name[job_id::job_num]):
-        if video_name in video_done:
-            #continue
-            pass
+    for vid,video_name in enumerate(vtool.data.video_all_name):
+        if video_name not in video_done:
+            continue
+            #pass
         video_genre = video_name[:video_name.rfind('/')]
         video_url = video_name[video_name.rfind('/')+1:]
         if len(vv) > 0 :
@@ -51,7 +51,7 @@ if __name__ == "__main__":
             elif vopt == -1 and video_url in vv:
                 continue
 
-        # print(video_name)
+        print(video_name)
         vtool.data.setVideoInfo(video_name)
 
         frame_ids = 'cluster_selected_list_min' 
@@ -86,6 +86,14 @@ if __name__ == "__main__":
             for oo in out:
                 print('mv %s_cluster.html bk/'%oo)
             import pdb; pdb.set_trace()
+        elif opt =='0.5': # black frames
+            vtool.processor.computeBlackFrame(thres_black=30)
+        elif opt =='0.6': # refine seg
+            if video_url in ['iS1g8G_njx8','qVMW_1aZXRk','0oPa3GJJDDA']:
+                continue
+            mask_id_func = lambda x: (x-vtool.data.FRAME_OFFSET)/vtool.data.video_frame_step
+            valid_ran = np.loadtxt(vtool.data.FRAME_ROOT.format(video_name) + 'black_frame30.txt').astype(int)
+            vtool.processor.segRefinement(mask_id_func=mask_id_func, valid_ran=valid_ran)
 
         # Detectron2
         elif opt == '1':
@@ -110,14 +118,13 @@ if __name__ == "__main__":
         elif opt == '2':
             cmd_file = 'db/run_stm2.sh'
             #vtool.setRedo(True)
-            if video_url not in ['noHAYjTjJKw']:
-            #if video_url not in ['lHzTcRqSOhc']:
+            if video_url not in ["ZlxIEWygQYY","OPf0YbXqDm0","cZy6sByBHY0","QOG6DAVFrkc","CfUlR_ghqXk","ScgkiTz4nPk","noHAYjTjJKw","lHzTcRqSOhc","ct5Q73pgVMA","wkuDpfiDPYs"]:
                 continue
             if tmp_start == 0:
                 vtool.util.writetxt(cmd_file, ['#/bin/bash'])
                 tmp_start= 1
             frame_ids_stm = frame_ids + 'A_factor'
-            vtool.processor.segSTM(frame_ids = frame_ids_stm, cmd_file = cmd_file)
+            vtool.processor.segSTM(frame_ids = frame_ids_stm, cmd_file = cmd_file, stm_len=100)
         elif opt == '2.01': # check output file number
             # desired output
             frame_ids_stm = frame_ids + 'A'
@@ -132,9 +139,8 @@ if __name__ == "__main__":
                 #import pdb; pdb.set_trace()
         elif opt == '2.1':
             cmd_file = 'db/run_stm_out.sh'
-            if video_url not in ['1Fg5iWmQjwk']:
-                #continue
-                pass
+            if video_url in ['iS1g8G_njx8','qVMW_1aZXRk','0oPa3GJJDDA']:
+                continue
             if tmp_start == 0:
                 vtool.util.writetxt(cmd_file, ['#/bin/bash'])
                 tmp_start= 1

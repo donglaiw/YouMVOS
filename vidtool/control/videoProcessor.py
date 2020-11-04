@@ -93,27 +93,28 @@ class videoProcessor(object):
         if frame_folder is None:
             frame_folder = self.data.getFrameName(-2)
         if output_file is None:
-            output_file = self.data.FOLDER_DOWNLOAD + self.data.video_name + '/black_frame.txt'
+            output_file = self.data.FOLDER_DOWNLOAD + self.data.video_name + '/black_frame%d.txt'%thres_black
 
-        if not os.path.exists(output_file):
+        if self.data.redo or not os.path.exists(output_file):
             vutil.mkdir(output_file, 'dir')
             frame_ids = self.data.getFrameIndex('uniform', frame_num = frame_num)
 
             output = -np.ones([len(frame_ids), 4], int)
-            for frame_id in frame_ids:
-                frame_name = vtool.data.FRAME_NAME.format(self.data.video_name, '') % frame_id
+            for i,frame_id in enumerate(frame_ids):
+                frame_name = self.data.FRAME_NAME.format(self.data.video_name, '') % frame_id
                 if os.path.exists(frame_name):
-                    tmp = imageio.imread(frame_name)
+                    tmp = imageio.imread(frame_name).max(axis=2)
                     row_black = np.where(tmp.max(axis=1) > thres_black)[0]
                     if len(row_black)>0:
-                        output[frame_id, 0] = row_black[0]
-                        output[frame_id, 2] = row_black[-1]
+                        output[i, 0] = row_black[0]
+                        output[i, 2] = row_black[-1]
                     col_black = np.where(tmp.max(axis=0) > thres_black)[0]
                     if len(col_black)>0:
-                        output[frame_id, 1] = col_black[0]
-                        output[frame_id, 3] = col_black[-1]
-
-            np.savetxt(output_file, output, '%d')
+                        output[i, 1] = col_black[0]
+                        output[i, 3] = col_black[-1]
+            output = output[output[:,0]>=0]
+            ran = np.hstack([output[:,:2].min(axis=0), output[:,2:].max(axis=0)])
+            np.savetxt(output_file, ran, '%d')
 
     # 2. Detectron2 for 2D instance segmentation
     def segDetectron2(self, frame_ids = 'shot', \
@@ -143,7 +144,7 @@ class videoProcessor(object):
     # 3. STM for video object segmentation
     def segSTM(self, frame_ids = 'shot_all_list', frame_ids_file = None, \
                              image_template = None, mask_folder = None, mask_index_factor = -1, output_template = None, \
-                             cmd_file = None, mask_step_output = -1, stm_anchor_num = -1):
+                             cmd_file = None, mask_step_output = -1, stm_anchor_num = -1, stm_len =150):
         # option 1: each mask is the first index in the frame_ids 
         # option 2: each mask index is a downsample version of frame_ids 
         # https://github.com/donglaiw/STM
@@ -198,33 +199,51 @@ class videoProcessor(object):
             #return
         vutil.mkdir(output_template, 'dir')
 
-        cmd = 'python ' + STM_folder + 'demo_youtop.py --video-fps %d --image-template %s --image-cluster "%s" --mask-folder %s --mask-index-factor %d,%d --mask-index-factor-output %d,%d --mask-template-output %s --stm-step %d --stm-height 480 --stm-mem-len 150 --stm-anchor-num %d --redo %d\n'
-        cmd = cmd % (self.data.video_frame_rate, image_template, frame_ids_str, mask_folder, mask_step_input, self.data.FRAME_OFFSET, mask_step_output, self.data.FRAME_OFFSET, output_template, stm_step, stm_anchor_num, self.data.redo)
+        cmd = 'python ' + STM_folder + 'demo_youtop.py --video-fps %d --image-template %s --image-cluster "%s" --mask-folder %s --mask-index-factor %d,%d --mask-index-factor-output %d,%d --mask-template-output %s --stm-step %d --stm-height 480 --stm-mem-len %d --stm-anchor-num %d --redo %d\n'
+        cmd = cmd % (self.data.video_frame_rate, image_template, frame_ids_str, mask_folder, mask_step_input, self.data.FRAME_OFFSET, mask_step_output, self.data.FRAME_OFFSET, output_template, stm_step, stm_len, stm_anchor_num, self.data.redo)
         if cmd_file is None:
             print(cmd)
         else:
             vutil.writetxt(cmd_file, cmd, 'a')
 
     # grabcut for refinement
-    def segRefinement(self, seg_folder = 'seg_out_all/', seg_folder_path = None,
-                 iter_image = 30, iter_algo = 50):
+    def segRefinement(self, im_folder = None, seg_folder = None, output_folder = None,\
+                      frame_step = -1, iter_image = 30, iter_algo = 50, mask_id_func=None, valid_ran=None):
         from ..lib import segRefinement
-        if seg_folder_path is None:
-            seg_folder_path = self.video_share_folder
+        if self.lib_seg_refinement is None:
+            self.lib_seg_refinement = segRefinement() 
+        
+        fn = self.data.video_name.replace('/','_')
+        if im_folder is None:
+            im_folder = self.data.FOLDER_RELEASE + 'JPEGImages/' + fn  + '/%05d.jpg'
+        if seg_folder is None:
+            seg_folder = self.data.PROCESSOR_STM2.format(self.data.video_name)
+        if output_folder is None:
+            output_folder = self.data.FOLDER_RELEASE + 'Annotations/' + fn  + '/%05d.png'
+        if frame_step == -1:
+            frame_step = self.data.video_frame_step
 
-        refine_folder =  seg_folder_path + seg_folder[:-1] + '_refine/' 
-        vutil.mkdir(refine_folder)
-        im_folder =  seg_folder_path + 'im/' 
-        seg_folder = seg_folder_path + seg_folder 
-
-        files_name_seg = sorted(glob(seg_folder + '*.png'))
-        files_name_im = sorted(glob(im_folder + '*.png'))
-        for file_name in files_name_seg:
-            output_name = refine_folder + file_name[file_name.rfind('/'):]
+        frame_ids = self.data.getFrameIndex('all', frame_rate=frame_step)
+        black = np.zeros(self.data.video_frame_size[::-1], np.uint8)
+        for frame_id in frame_ids[self.data.job_id::self.data.job_num]:
+            output_name = output_folder % frame_id
             if self.data.redo or not os.path.exists(output_name):
-                seg = imageio.imread(file_name)
-                fid = int(file_name[file_name.rfind('s')+1:-4])
-                im = imageio.imread(files_name_im[fid])
-                seg_out = vutil.segRefineGrabcut(im, seg, iter_image, iter_algo)
-                if seg_out is not None:
-                    imageio.imwrite(output_name, seg_out)    
+                im_name = im_folder % frame_id
+                if mask_id_func is None:
+                    seg_name = seg_folder % frame_id
+                else:
+                    seg_name = seg_folder % mask_id_func(frame_id)
+                if os.path.exists(seg_name): 
+                    seg = imageio.imread(seg_name)
+                    if valid_ran is not None:
+                        # add 1-pix border
+                        seg[:valid_ran[0]+1] = 0
+                        seg[valid_ran[2]:] = 0
+                        seg[:, :valid_ran[1]+1] = 0
+                        seg[:, valid_ran[3]:] = 0
+                    im = imageio.imread(im_name)
+                    seg_out = self.lib_seg_refinement.segRefineGrabcut(im, seg)
+                    if seg_out is not None:
+                        imageio.imwrite(output_name, seg_out)    
+                else:
+                    imageio.imwrite(output_name, black)

@@ -40,10 +40,10 @@ elif opt =='1':
     fn='yt'
     suf = ' \n'
     num = 7;cn = 'scripts/runProcessor.py 0.2'
-    num = 9;cn = 'scripts/runProcessor.py 0'
     num = 3;cn = 'scripts/runDownloader.py 0.2'
     num = 7;cn = 'scripts/runProofreader.py 0'
-    num = 9;cn = 'scripts/T_release.py 0'
+    num = 8;cn = 'scripts/T_release.py 0'
+    num = 5;cn = 'scripts/runProcessor.py 0.6'
     
     #pp = 'seas_dgx1';tt='0-24:00'
     #pp = 'holyseasgpu';tt='0-24:00'
@@ -55,11 +55,11 @@ elif opt =='2':
     num = 1;
     do_gpu = True 
     pp = 'seas_dgx1';tt='0-24:00'
-    mem = 40000
+    mem = 10000
     #pp = 'holyseasgpu';tt='0-24:00'
     cmd += ['module load cuda/10.2.89-fasrc01 cudnn/7.6.5.32_cuda10.2-fasrc01 \n']
     cmd += [sa3 + 'stm \n']
-    cmd += ['./db/run_stm.sh']
+    cmd += ['./db/run_stm_out.sh']
 
 
 pref=get_pref(mem, do_gpu, pp, tt)+"""
