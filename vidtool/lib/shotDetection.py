@@ -10,9 +10,8 @@ class shotDetection(object):
         self.stat_folder = stat_folder
         self.image_template = image_template
 
-
     # 1. Shot detection
-    def segFolder(self, stat_folder):
+    def setFolder(self, stat_folder):
         self.stat_folder = stat_folder
 
     def getStat(self, stat):

@@ -62,10 +62,11 @@ class videoProcessor(object):
     # for shot youtube clips
     def shotDetection(self, thres_dark = 50, thres_diff = 20, thres_shot_len = 1):
         from ..lib import shotDetection
+        frame_folder = self.data.FOLDER_DOWNLOAD.format(self.data.video_name)
         if self.lib_shot_detection is None:
-            self.lib_shot_detection = shotDetection(self.data.FRAME_ROOT.format(self.data.video_name))
+            self.lib_shot_detection = shotDetection(frame_folder)
         else:
-            self.lib_shot_detection.setFolder(self.data.video_data_folder)
+            self.lib_shot_detection.setFolder(frame_folder)
         # compute rgb diff
         self.lib_shot_detection.computeMaxDiff()
         # compute shot
@@ -142,9 +143,10 @@ class videoProcessor(object):
             vutil.writetxt(cmd_file, cmd, 'a')
 
     # 3. STM for video object segmentation
-    def segSTM(self, frame_ids = 'shot_all_list', frame_ids_file = None, \
+    def segSTM(self, frame_ids = 'shot_all_list', frame_ids_file = None, frame_ids_after = -1, \
                              image_template = None, mask_folder = None, mask_index_factor = -1, output_template = None, \
-                             cmd_file = None, mask_step_output = -1, stm_anchor_num = -1, stm_len =150):
+                             cmd_file = None, mask_step_input = 0, mask_step_input_offset = -1, mask_step_output = -1, \
+                             stm_anchor_num = -1, stm_len =150, stm_step = -1):
         # option 1: each mask is the first index in the frame_ids 
         # option 2: each mask index is a downsample version of frame_ids 
         # https://github.com/donglaiw/STM
@@ -153,43 +155,44 @@ class videoProcessor(object):
 
         STM_folder = self.data.LIB_STM
         # sample rate: need to be divisible
-        stm_step = self.data.video_frame_step
-
+        if stm_step < 0 :
+            stm_step = self.data.video_frame_step
+        if mask_step_input_offset < 0:
+            mask_step_input_offset = self.data.FRAME_OFFSET
         if isinstance(frame_ids, str):
             option = frame_ids
-            if '_out' in option:
+            if '_out' in option: # 6FPS
                 if 'shot' in option:
                     frame_ids = self.data.getFrameIndex(option, input_file = '_shot_out', frame_rate = stm_step)
-                    frame_ids_str = vutil.convertClusterListToStr(frame_ids)
                 elif 'cluster' in frame_ids:
                     frame_ids = self.data.loadClusterJs(option=option)
-                    frame_ids_str = vutil.convertClusterListToStr(frame_ids)
                 else:
                     raise ValueError('unknown frame_ids: %s' % frame_ids)
                 # input mask step
-                mask_step_input = self.data.video_frame_rate
+                if mask_step_input == 0:
+                    mask_step_input = self.data.video_frame_rate
                 # prop per frame_step
                 if mask_step_output < 0:
                     mask_step_output = self.data.video_frame_step
             else:
-                # no need
-                mask_step_input = 0
                 # prop per sec
                 if mask_step_output < 0:
                     mask_step_output = self.data.video_frame_rate
                 if 'shot' in option:
                     frame_ids = self.data.getFrameIndex(option, input_file = frame_ids_file)
-                    frame_ids_str = vutil.convertClusterListToStr(frame_ids)
                 elif 'cluster' in frame_ids:
                     frame_ids = self.data.loadClusterJs(option=option)
-                    frame_ids_str = vutil.convertClusterListToStr(frame_ids)
                 else:
                     raise ValueError('unknown frame_ids: %s' % frame_ids)
-
+        if frame_ids_after > 0:
+            for i in range(len(frame_ids)):
+                frame_ids[i] = [x for x in frame_ids[i] if x > frame_ids_after]
+            frame_ids = [x for x in frame_ids if len(x) > 0]
+        frame_ids_str = vutil.convertClusterListToStr(frame_ids)
         if image_template is None:
             image_template = self.data.getFrameName(-1)
         if mask_folder is None:
-            mask_folder =  self.data.PROCESSOR_VAST.format(self.data.video_name) + 'seg_shot_bd/'
+            mask_folder =  self.data.FOLDER_VAST.format(self.data.video_name) + 'seg_shot_bd/'
         if output_template is None:
             output_template =  self.data.PROCESSOR_STM.format(self.data.video_name)
 
@@ -199,8 +202,11 @@ class videoProcessor(object):
             #return
         vutil.mkdir(output_template, 'dir')
 
+        # mode=shot: first frame is labeled, while others are to be propagated
+        # mode=index: need mask to have the index
+
         cmd = 'python ' + STM_folder + 'demo_youtop.py --video-fps %d --image-template %s --image-cluster "%s" --mask-folder %s --mask-index-factor %d,%d --mask-index-factor-output %d,%d --mask-template-output %s --stm-step %d --stm-height 480 --stm-mem-len %d --stm-anchor-num %d --redo %d\n'
-        cmd = cmd % (self.data.video_frame_rate, image_template, frame_ids_str, mask_folder, mask_step_input, self.data.FRAME_OFFSET, mask_step_output, self.data.FRAME_OFFSET, output_template, stm_step, stm_len, stm_anchor_num, self.data.redo)
+        cmd = cmd % (self.data.video_frame_rate, image_template, frame_ids_str, mask_folder, mask_step_input, mask_step_input_offset, mask_step_output, self.data.FRAME_OFFSET, output_template, stm_step, stm_len, stm_anchor_num, self.data.redo)
         if cmd_file is None:
             print(cmd)
         else:
@@ -227,7 +233,16 @@ class videoProcessor(object):
         black = np.zeros(self.data.video_frame_size[::-1], np.uint8)
         for frame_id in frame_ids[self.data.job_id::self.data.job_num]:
             output_name = output_folder % frame_id
-            if self.data.redo or not os.path.exists(output_name):
+            # check invalid
+            redo = self.data.redo or not os.path.exists(output_name)
+            try:
+                im = imageio.imread(output_name)
+            except:
+                print("can't read", output_name)
+                redo = True
+
+            if redo :
+            #if self.data.redo or not os.path.exists(output_name):
                 im_name = im_folder % frame_id
                 if mask_id_func is None:
                     seg_name = seg_folder % frame_id

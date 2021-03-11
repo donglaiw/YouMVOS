@@ -46,7 +46,16 @@ class videoProofreader(object):
         # Convert shot.js into js and html
         output_js = self.data.getJs(suf_out)
         if self.data.redo or not os.path.exists(output_js):
-            shots, shots_sel = self.data.loadShotJs(shot_js=suf_in)
+            if '_shot' in suf_in:
+                shots, shots_sel = self.data.loadShotJs(shot_js=suf_in)
+            else:
+                clusters, clusters_sel = self.data.loadClusterJs(cluster_js=suf_in)
+                shots, shots_sel = vutil.convertClusterListToShot(clusters, clusters_sel)
+                if (shots[1:, 0] - shots[:-1, 1] != 1).sum()>0:
+                    # exist missing frames
+                    import pdb; pdb.set_trace()
+                shots = shots[:,0]
+
             shots_v2 = shots * sr_ratio 
             # use frame_diff to refine shot
             frame_diff = np.loadtxt(self.data.getTxt(suf = 'rgb_diff')).astype(int)
@@ -106,29 +115,46 @@ class videoProofreader(object):
                 overlay_id = ','.join([str(int(x[x.rfind('_')+1:-4])) for x in overlay_files]) 
             elif '.txt' not in input_txt:
                 # load shot result
-                overlay_id = ','.join([str(x) for x in self.data.getFrameIndex(input_txt)])
+                overlay_id = self.data.getFrameIndex(input_txt)
+                if overlay_id is None:
+                    # can be missing files
+                    return 0
+                overlay_id = ','.join([str(x) for x in overlay_id])
             else:
                 overlay_id = vutil.readtxt(input_txt)[:-1]
             output = html_seg % ('../../../frame_ds/', '../../../seg_ds/', self.data.video_name, overlay_id, self.data.video_frame_num, seg_prefix, seg_suffix, self.data.video_frame_rate)
             vutil.writetxt(output_html, output)
 
-    def webProofreadCharacter(self, video_names, seg_folder='seg_out', seg_pref='manual_'):
+    def webProofreadCharacter(self, video_names, seg_folder='seg_out', seg_pref='manual_', output_html = None):
         # one page for many videos
-        output_html = self.data.PROOFREADER_HTML_TEST % (self.data.video_genre, 'dsp_character', '')
+        if output_html is None:
+            output_html = self.data.PROOFREADER_HTML_TEST % (self.data.video_genre, 'dsp_character', '')
         vutil.mkdir(output_html, 'dir')
+        num=5
         if self.data.redo or not os.path.exists(output_html):
             output = html_character_header % '../../../seg_ds/'
             for video_name in video_names:
                 self.data.setVideoInfo(video_name)
-                info_txt = self.data.FRAME_ROOT.format(self.data.video_name) + '/%s.txt' % (seg_folder)
+                info_txt = self.data.FOLDER_DOWNLOAD.format(self.data.video_name) + '/%s.txt' % (seg_folder)
                 if os.path.exists(info_txt):
                     info = vutil.readtxt(info_txt)
-                    info_str = vutil.converListToJsArr(info)
-                    output += html_character_body % (self.data.video_name, info_str, self.data.video_frame_rate, seg_pref)
+                    # skip empty ones
+                    if len(info)>0:
+                        for j in range(len(info)):
+                            tmp = info[j][:-1].split(',')
+                            if (len(tmp)//num) > 0:
+                                tmp = tmp[::(len(tmp)//num)]
+                            info[j] = ','.join([str(x) for x in tmp]) + '\n'
+                        info_str = vutil.converListToJsArr(info)[:-1]
+                        output += html_character_body % (self.data.video_name, info_str, self.data.video_frame_step, seg_pref)
+                    else:
+                        print('empty:', info_txt)
+                else:
+                    print('no:', info_txt)
             output += html_character_footer
             vutil.writetxt(output_html, output)
 
-    def vastProofreadSeg(self, frame_ids = 0, vsvi_suf='', seg_suf='',mask_id_func=None, input_js = None, frame_ids_after=0):
+    def vastProofreadSeg(self, frame_ids = 0, vsvi_suf='', seg_suf='',mask_id_func=None, input_js = None, frame_ids_after=-1):
         # Output im.vsvi and seg.vsvi for VAST-lite proofreading
         if isinstance(frame_ids, str):
             # frame_ids is the option
@@ -149,7 +175,7 @@ class videoProofreader(object):
         else:
             vsvi_type = ['im', 'seg%s'%seg_suf]
         vsvi_filename = ['image_%05d.png','seg_%05d.png']
-        output_folder = self.data.PROCESSOR_VAST.format(self.data.video_name)
+        output_folder = self.data.FOLDER_VAST.format(self.data.video_name)
         vutil.mkdir(output_folder)
         for vsvi_id in range(len(vsvi_type)):
             output_vsvi =  output_folder + '%s.vsvi' % (vsvi_type[vsvi_id] + vsvi_suf)
@@ -164,12 +190,12 @@ class videoProofreader(object):
 
     def vastProofreadSegStat(self, seg_folder = 'seg_out', seg_root = None):
         max_obj = 20
-        output_txt = self.data.FRAME_ROOT.format(self.data.video_name) + '/%s.txt' %(seg_folder)
+        output_txt = self.data.FOLDER_DOWNLOAD.format(self.data.video_name) + '/%s.txt' %(seg_folder)
 
         if self.data.redo or not os.path.exists(output_txt):
             if seg_root is None:
                 seg_root = self.data.FOLDER_DOWNLOAD
-            mask_template =  seg_root + self.data.video_name + '/%s/'%seg_folder
+            mask_template =  seg_root.format(self.data.video_name) + '/%s/'%seg_folder
             mask_names = sorted(glob(mask_template + '*.png'))
             k_ind = [None] * max_obj
             k_id = np.zeros(max_obj, int)

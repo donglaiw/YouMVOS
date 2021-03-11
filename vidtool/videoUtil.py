@@ -85,9 +85,6 @@ def VideoTxtToJs(input_txt, output_js):
 
     writetxt(output_js, output)
 
-
-
-
 def readtxt(filename):
     a= open(filename)
     content = a.readlines()
@@ -159,7 +156,17 @@ def converArrToStr(in_arr):
 def convertClusterStrToClusterList(cluster_str):
     if cluster_str[-1] == ';':
         cluster_str = cluster_str[:-1]
-    cluster_list = [[int(y) for y in x.split(',')] for x in cluster_str.split(';')]
+    cluster_str_list = cluster_str.split(';')
+    cluster_list = [None] * len(cluster_str_list)
+    for i,x in enumerate(cluster_str_list):
+        out = []
+        for y in x.split(','):
+            if '-' in y:
+                tmp = [int(z) for z in y.split('-')]
+                out += range(tmp[0], tmp[1]+1)
+            else:
+                out += [int(y)]
+        cluster_list[i] = out
     return cluster_list
 
 def convertClusterListToStr(shots):
@@ -169,6 +176,25 @@ def convertClusterArrToStr(cluster_ids):
     uid = np.unique(cluster_ids)
     return ';'.join([','.join([str(y) for y in np.where(cluster_ids==x)[0]]) for x in uid]) + ';'
 
+def convertClusterListToShot(clusters, clusters_sel, frame_rate=1):
+    shots = []
+    shots_sel = []
+    for cid, cluster in enumerate(clusters):
+        cluster = sorted(cluster)
+        lt = [x for x in range(1,len(cluster)) if cluster[x]-cluster[x-1]!=frame_rate]
+        if len(cluster) == 1 or len(lt)==0:
+            shots += [[cluster[0], cluster[-1]]]
+            shots_sel += [clusters_sel[cid]]
+        else:
+            st = [0] + lt[:-1]
+            tmp = [[cluster[st[x]],cluster[lt[x]-1]] for x in range(len(st))]
+            tmp += [[cluster[lt[-1]], cluster[-1]]]
+            shots += tmp
+            shots_sel += [clusters_sel[cid]] * len(tmp)
+    # sorted
+    shots = np.vstack(shots)
+    sid = np.argsort(shots[:,0])
+    return shots[sid], np.array(shots_sel)[sid]
 
 def convertClusterToJs(shots):
     if isinstance(shots, list):
@@ -215,7 +241,10 @@ def getVideoViews(video_url):
     if not os.path.exists(tmp_file):
         os.system('wget "https://www.googleapis.com/youtube/v3/videos?part=statistics&id=%s&key=%s" -O %s' %(video_url, secret.YOUTUBE_API_KEY, tmp_file))
     data = json.load(open(tmp_file))
-    return data['items'][0]['statistics']['viewCount']
+    if len(data['items']) >0 and 'statistics' in data['items'][0]:
+        return int(data['items'][0]['statistics']['viewCount'])
+    else:
+        return -1
 
 def getVideoFrameStep(fps):
     if fps in [25,30]:

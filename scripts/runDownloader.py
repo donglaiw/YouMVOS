@@ -16,7 +16,8 @@ if __name__ == "__main__":
     fn = 'data/video_v2'
     fn = 'data/video_v0'
     fn = 'data/video'
-    vopt=0;vv=['movie_trailer']
+    vv=[]
+    #vopt=0;vv=['movie_trailer']
     
     if opt[0] in ['1']:
         vtool.data.setInputVideoJson(fn + '.json')
@@ -69,7 +70,7 @@ if __name__ == "__main__":
             elif opt == '1.2': # get length
                 stat[vid] = vtool.data.video_duration
             elif opt == '1.3': # num shots
-                fn = vtool.data.FRAME_ROOT.format(video_name) + 'shot.txt'
+                fn = vtool.data.FOLDER_DOWNLOAD.format(video_name) + 'shot.txt'
                 if os.path.exists(fn):
                     stat[vid] = np.loadtxt(fn).shape[0]
 
@@ -78,14 +79,16 @@ if __name__ == "__main__":
                 if stat[vid] == 27:
                     import pdb; pdb.set_trace()
             elif opt == '1.5': # number of character
-                stat[vid] = len(vtool.util.readtxt(vtool.data.FRAME_ROOT.format(video_name) + '/seg_all_out.txt'))
+                stat[vid] = len(vtool.util.readtxt(vtool.data.FOLDER_DOWNLOAD.format(video_name) + '/seg_all_out.txt'))
 
 
-        print(stat.mean())
-        print(stat[stat>0].mean())
-        if opt in ['1.4']:
-            ui, uc = np.unique(stat, return_counts=True)
-            print(ui,uc)
-        if opt in ['1.5']:
-            for x in stat[stat>0]:
-                print(x)
+    print(stat.mean())
+    import pdb; pdb.set_trace()
+    # stat.reshape(20,-1).mean(axis=0)
+    print(stat[stat>0].mean())
+    if opt in ['1.4']:
+        ui, uc = np.unique(stat, return_counts=True)
+        print(ui,uc)
+    if opt in ['1.5']:
+        for x in stat[stat>0]:
+            print(x)

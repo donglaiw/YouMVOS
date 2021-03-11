@@ -25,7 +25,7 @@ html_character_body = """
     video_name = "%s";
     seg_info = %s;
     fps = %d;
-    seg_pref = "%s";
+    seg_pref = "/%s";
     out += "<tr><td>"+video_id+'. '+video_name+"</td><td colspan=" + num_img + ">images</td></tr>"
     for(var i = 0;i < seg_info.length; i ++){
         if( seg_info[i].length-1 < num_img){

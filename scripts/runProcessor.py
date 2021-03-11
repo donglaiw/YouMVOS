@@ -15,30 +15,48 @@ if __name__ == "__main__":
 
     fn = 'data/video_v0'
     fn = 'data/yt_train'
-    video_done = vtool.util.readtxt(fn + '.txt')
-    video_done = [x[:x.find(',')] for x in video_done]
+    fn = 'data/yt_val'
+    #fn = 'db/round2-2/bad'
+    #fn = 'db/round2-2/bad_v2'
+    fn = 'data/yt_test'
 
+
+    fn = 'db/round2-2/bad_v4'
+    video_done_all = vtool.util.readtxt(fn + '.txt')
+    video_done = [x[:x.find(',')] for x in video_done_all]
+
+    #video_done = ['howto/qsxcVsFDDoA','product/4RtNDHPq2V4']
     fn = 'data/video_v1'
     fn = 'data/video_v2'
     fn = 'data/video'
-    vopt=0;vv=['pet']
     vopt=0;vv=['education','product','howto','cartoon','tv']
     vopt=1;vv=['746NhRSrNOY']
     vopt=1;vv=['1NIhv6fCqAU','yZLzLVAUJiU','MFNv-FJFGTg','Fhuc6qOGNPc']
-    vopt=0;vv=['education']
-    vopt=0;vv=['sports']
-    vopt=0;vv=['cooking']
     vopt=0;vv=['howto']
-    vopt=0;vv=['movie_trailer']
-    vopt=0;vv=['music_video']
-    fn = 'data/video_v0';vv=[]
+    vopt=0;vv=['movie_trailer','music_video','cooking','education','pet']
+    #vopt=0;vv=['pet']
+    #vopt=0;vv=['cooking']
+    #vopt=0;vv=['education']
+    #vopt=0;vv=['movie_trailer']
+    #vopt=0;vv=['music_video']
+    #vopt=0;vv=[]
+    vopt=0;vv=['sports','tv']
+    vopt=0;vv=['kid']
+    vopt=0;vv=['howto']
+    vopt=0;vv=['product']
+    #fn = 'data/video_v0';vv=[]
     vtool.data.setInputVideoJson(fn + '.json')
+    vv=[]
     
     tmp_start = 0
+    # parallel within each video
+    #vtool.data.video_all_name = vtool.data.video_all_name[::-1]
     for vid,video_name in enumerate(vtool.data.video_all_name):
+    #for vid,video_name in enumerate(vtool.data.video_all_name[job_id::job_num]):
         if video_name not in video_done:
-            continue
-            #pass
+            # continue
+            pass
+        #print(video_name)
         video_genre = video_name[:video_name.rfind('/')]
         video_url = video_name[video_name.rfind('/')+1:]
         if len(vv) > 0 :
@@ -51,14 +69,12 @@ if __name__ == "__main__":
             elif vopt == -1 and video_url in vv:
                 continue
 
-        print(video_name)
         vtool.data.setVideoInfo(video_name)
 
         frame_ids = 'cluster_selected_list_min' 
         if video_genre in ['movie_trailer', 'music_video']:
-            frame_ids = 'shot_selected_list' 
-        if video_name in video_done:
-            frame_ids = 'shot_selected_list' 
+            if video_url not in ['iS1g8G_njx8']:
+                frame_ids = 'shot_selected_list' 
 
         if video_url in ['G2AvRfxgpL4', 'zl7A-Vbe5N8','o78y1264dD8','jm2r5xzYx-A','016LXFHpFCk','2O7K-8G2nwU','AbBe0MjtN1I']:
             frame_ids = 'shot_selected_list' 
@@ -69,7 +85,9 @@ if __name__ == "__main__":
 
         # Set up the web proofreading for shot detection and classification
         if opt == '0':# shot detection
-            vtool.processor.shotDetection()
+            vtool.setSingleProcess()
+            if not os.path.exists(vtool.data.FOLDER_DOWNLOAD.format(video_name) + 'rgb_max.txt'):
+                vtool.processor.shotDetection()
         elif opt =='0.3': # cluster frames
             #vtool.setRedo(True)
             frame_template = vtool.data.FRAME_NAME_DS.format(vtool.data.video_name)
@@ -85,27 +103,27 @@ if __name__ == "__main__":
             out = list(set(fns) - set(vns))
             for oo in out:
                 print('mv %s_cluster.html bk/'%oo)
-            import pdb; pdb.set_trace()
         elif opt =='0.5': # black frames
             vtool.processor.computeBlackFrame(thres_black=30)
         elif opt =='0.6': # refine seg
-            if video_url in ['iS1g8G_njx8','qVMW_1aZXRk','0oPa3GJJDDA']:
-                continue
+            vtool.setRedo(False)
             mask_id_func = lambda x: (x-vtool.data.FRAME_OFFSET)/vtool.data.video_frame_step
-            valid_ran = np.loadtxt(vtool.data.FRAME_ROOT.format(video_name) + 'black_frame30.txt').astype(int)
+            valid_ran = np.loadtxt(vtool.data.FOLDER_DOWNLOAD.format(video_name) + 'black_frame30.txt').astype(int)
             vtool.processor.segRefinement(mask_id_func=mask_id_func, valid_ran=valid_ran)
 
         # Detectron2
         elif opt == '1':
             cmd_file = 'db/run_detectron2.sh'
             if tmp_start == 0:
-                os.remove(cmd_file)
+                if os.path.exists(cmd_file):
+                    os.remove(cmd_file)
                 vtool.util.writetxt(cmd_file, ['#/bin/bash'])
                 tmp_start = 1
-            if video_url not in ['8b0ubLO2MUE']:
+            if video_url not in ['wk7qkgS-TTg']:
                 continue
             # for movie_tralier, compute for all
-            frame_ids = frame_ids + 'A'
+            frame_ids = frame_ids + 'A_arr'
+            #frame_ids = 'cluster_selected_min'
             vtool.processor.segDetectron2(frame_ids = frame_ids, cmd_file = cmd_file)
 
         # STM
@@ -115,11 +133,12 @@ if __name__ == "__main__":
             num_cluster = len(frame_ids)
             import pdb; pdb.set_trace()
 
-        elif opt == '2':
-            cmd_file = 'db/run_stm2.sh'
-            #vtool.setRedo(True)
-            if video_url not in ["ZlxIEWygQYY","OPf0YbXqDm0","cZy6sByBHY0","QOG6DAVFrkc","CfUlR_ghqXk","ScgkiTz4nPk","noHAYjTjJKw","lHzTcRqSOhc","ct5Q73pgVMA","wkuDpfiDPYs"]:
+        elif opt == '2': # seg_shot_bd -> 1FPS
+            cmd_file = 'db/run_stm.sh'
+            if video_url not in ['JQk56_ZJEOo']:
                 continue
+            import pdb; pdb.set_trace()
+            vtool.setRedo(True)
             if tmp_start == 0:
                 vtool.util.writetxt(cmd_file, ['#/bin/bash'])
                 tmp_start= 1
@@ -137,19 +156,99 @@ if __name__ == "__main__":
             if diff<0 or diff>20 :
                 print('diff:',video_name,num_mask,len(frame_ids))
                 #import pdb; pdb.set_trace()
+
         elif opt == '2.1':
+            # 1 FPS -> 6 FPS
             cmd_file = 'db/run_stm_out.sh'
-            if video_url in ['iS1g8G_njx8','qVMW_1aZXRk','0oPa3GJJDDA']:
+            vtool.setRedo(True)
+            vvv = ['product/tQANVXppDPE','education/uyMtsyzXWd4','product/8OJdwuvZWrI']
+            vvv = ['sports/8b0ubLO2MUE','cooking/u6TFP_r2oA8','kid/do6EgKG_YUo']
+            vvv = ['sports/_6VeZAZdff0','sports/4rp2aLQl7vg','sports/zl7A-Vbe5N8','cooking/ct5Q73pgVMA','tv/Z4SXxxUnq0U','tv/zgIib_Uj1T4','product/wkuDpfiDPYs']
+            vvv = ["sports/NzYtFLpJrQU","music_video/7PCkvCPvDXk","product/dfToHzOmwdI","movie_trailer/EcxBrTvLbBM","howto/qsxcVsFDDoA","howto/GibMs1kod2Y","tv/_yl2fV6SM_8","tv/746NhRSrNOY"]
+            vvv = ['sports/2O7K-8G2nwU','product/JQk56_ZJEOo','tv/izh-j8KUYjs',"cooking/ScgkiTz4nPk","kid/xqvN9yJeyO0","howto/wk7qkgS-TTg","tv/K_dFhEeuCtM"]
+            vvv = ['product/4RtNDHPq2V4']
+            vvv = ['cooking/iUtLMkLhUKY','howto/wk7qkgS-TTg']
+            if video_name not in vvv:
                 continue
+                #pass
+            print('rm /n/pfister_lab2/Lab/donglai/YouTop200/db/share/%s/seg_prop_out/*.png'%video_name)
             if tmp_start == 0:
                 vtool.util.writetxt(cmd_file, ['#/bin/bash'])
                 tmp_start= 1
-            frame_ids_stm = frame_ids + 'A_factor_out'
-            mask_folder = vtool.data.PROCESSOR_VAST.format(video_name) + 'seg_prop_pf/'
+            frame_ids_stm = 'shot_selected_list_out'
+            mask_folder = vtool.data.FOLDER_VAST.format(video_name) + 'seg_prop_pf/'
             output_template = vtool.data.PROCESSOR_STM2.format(video_name)
             vtool.processor.segSTM(frame_ids = frame_ids_stm, cmd_file = cmd_file, \
                                   output_template = output_template, \
                                   mask_folder = mask_folder, stm_anchor_num = 2)
+        # dense sample -> 1 FPS
+        elif opt == '2.2':
+            # rename seg files
+            video_done = ['product/4RtNDHPq2V4']
+            video_done = ['cooking/iUtLMkLhUKY']
+            if video_name not in video_done:
+                continue
+            output_folder2 = vtool.data.FOLDER_VAST.format(video_name) + 'seg_r2_pf_rename/'
+            vtool.util.mkdir(output_folder2)
+            fns = glob(output_folder2 + '/*.png')
+            if len(fns) == 0:
+                output_folder = vtool.data.FOLDER_VAST.format(video_name) + 'seg_r2_pf/'
+                fns = sorted(glob(output_folder + '/*.png'))
+                if len(fns) > 0:
+                    frame_ids_stm = frame_ids[:frame_ids.rfind('_')] + '_arr_every-10'
+                    if video_url in ['4RtNDHPq2V4']:
+                        frame_ids_stm = frame_ids[:frame_ids.rfind('_')] + '_arr_every-20'
+                    elif video_url in ['iUtLMkLhUKY']:
+                        frame_ids_stm = frame_ids[:frame_ids.rfind('_')] + '_arr_every-5'
+                    frame_ids = vtool.data.getFrameIndex(frame_ids_stm)
+                    tmp_st = [int(x[x.find(',')+1:-1]) for x in video_done_all if video_name in x][0]
+                    # was a bug
+                    frame_ids = frame_ids[frame_ids > tmp_st]
+                    #frame_ids = frame_ids[frame_ids > 1+tmp_st*vtool.data.video_frame_rate]
+                    fid = int(fns[-1][fns[-1].rfind('s')+1:-4])
+                    print(fid, len(frame_ids))
+                    assert ((len(frame_ids) - fid -1) >= 0) * ((len(frame_ids) - fid -1) <= 2)
+                    # if bug: manual copy ...
+                    for fn in fns:
+                        fid = int(fn[fn.rfind('s')+1:-4])
+                        shutil.copy(fn, output_folder2 + 'seg_%05d.png'%frame_ids[fid])
+
+        elif opt == '2.21': # dense sample -> 1 FPS
+            cmd_file = 'db/run_stm_dense.sh'
+            video_done = ['cooking/iUtLMkLhUKY']
+            if video_name not in video_done:
+                #pass
+                continue
+            print(video_name)
+            if tmp_start == 0:
+                vtool.util.writetxt(cmd_file, ['#/bin/bash'])
+                tmp_start= 1
+
+            tmp_st = [int(x[x.find(',')+1:-1]) for x in video_done_all if video_name in x][0]
+            tmp_st = tmp_st * vtool.data.video_frame_rate + 1
+            frame_ids_stm = frame_ids + 'A_factor'
+            #frame_ids_stm = frame_ids + 'A_factor_every-10'
+            mask_folder = vtool.data.FOLDER_VAST.format(video_name) + 'seg_r2_pf_rename/'
+            output_template = vtool.data.PROCESSOR_STM.format(video_name).replace('seg_prop','seg_prop_v2')
+            vtool.processor.segSTM(frame_ids = frame_ids_stm, cmd_file = cmd_file, \
+                                    output_template = output_template, \
+                                    frame_ids_after = tmp_st, stm_len = 60, \
+                                    mask_folder = mask_folder, stm_anchor_num = 2, \
+                                    mask_step_input = 1, mask_step_input_offset = 0, \
+                                    mask_step_output = vtool.data.video_frame_rate, stm_step = vtool.data.video_frame_rate)
+        elif opt == '2.22': # copy before tmp_st [done] into 1 FPS
+            if video_url not in video_done:
+                continue
+            tmp_st = [int(x[x.find(',')+1:-1]) for x in video_done_all if video_name in x][0]
+            tmp_st = tmp_st * vtool.data.video_frame_rate + 1
+
+            input_folder = vtool.data.FOLDER_VAST.format(video_name) + 'seg_prop_pf/_s%03d.png'
+            output_folder = vtool.data.FOLDER_VAST.format(video_name) + 'seg_prop_v2/seg_%05d.png'
+            for i in range(tmp_st+1):
+                fn = input_folder % i
+                sn = output_folder % i
+                if os.path.exists(fn) and not os.path.exists(sn):
+                    shutil.copy(fn, sn)
         elif opt == '2.9': # check file date
             pass
             import datetime

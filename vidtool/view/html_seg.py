@@ -48,6 +48,7 @@ $("#fps").val(fps)
 
 var genre_name = "./";
 var bad_seg = [];
+var bad_shot = [];
 var video_url = video_name;
 if (video_name.includes('/')){
     genre_name = video_name.substr(0, video_name.lastIndexOf('/'));
@@ -109,7 +110,9 @@ function update_display(){
                 }
                 out+='<td class="mask" style="padding:6px;background-color:white" id="i'+j+'">'
                 if(overlay_id.includes(getIndex(j, fps))){
-                    out += '<img height=100 src="'+getMaskName(j, fps)+'">' 
+                //if(true){
+                    //out += '<img height=100 src="'+ loadImage(getMaskName(j, fps), getImName(j, fps))+'">' 
+                    out += '<img height=100 src="'+getMaskName(j, fps)+'">'
                 }else{
                     out += '<img height=100 src="'+getImName(j, fps)+'">'
                 }
@@ -143,9 +146,11 @@ function update_display(){
                 }
                 out += '<td>'+shot_index[i][j] + '<br/>'
                 if(overlay_id.includes(getIndex(shot_index[i][j], fps))){
-                    out += '<img height=100 src="'+getMaskName(shot_index[i][j])+'">' 
+                //if(true){
+                    //out += '<img height=100 src="'+ loadImage(getMaskName(shot_index[i][j], fps), getImName(shot_index[i][j], fps))+'">' 
+                    out += '<img height=100 src="'+getMaskName(shot_index[i][j], fps)+'">'
                 }else{
-                    out += '<img height=100 src="'+getImName(shot_index[i][j])+'">'
+                    out += '<img height=100 src="'+getImName(shot_index[i][j], fps)+'">'
                 }
                 out += '</td>'
 
@@ -174,10 +179,17 @@ function update_display(){
     $(".mask").click(function() {
         var color = getNextColor($(this)[0].style.backgroundColor, color_name_seg);
         var seg_id = parseInt($(this)[0].id.substr(1))
-        if(color=="red" && !bad_seg.includes(seg_id)){
+        
+        if (bad_seg.includes(seg_id)){
+            bad_seg = bad_seg.filter(function(value, index, arr){ return value != seg_id;});
+        }
+        if (bad_shot.includes(seg_id)){
+            bad_shot = bad_shot.filter(function(value, index, arr){ return value != seg_id;});
+        }
+        if(color=="red"){
            bad_seg.push(seg_id) 
-        }else{
-           bad_seg = bad_seg.filter(function(value, index, arr){ return value != seg_id;});
+        }else if(color=="green"){
+           bad_shot.push(seg_id) 
         }
         $(this)[0].style.backgroundColor = color;
     });
@@ -219,8 +231,8 @@ $("#suffix").change(function(){
 });
 $("#sub").click(function(){
     ans_out = $("#shot").val();
-    console.log('shot:'+shot_selection);
-    console.log('bad-seg:'+bad_seg);
+    console.log('bad-ids');
+    console.log(bad_seg + ';' + bad_shot);
   });
 </script>
 """

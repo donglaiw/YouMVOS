@@ -33,20 +33,28 @@ if opt =='0':
     num = 10;cn = 'T_movie.py 0.121'
     num = 10;cn = 'T_movie.py 0.121'
     
+    cmd+=['cd ' + D0 + ' \n']
     cmd+=[sa+' idm \n']
     cmd+=['ls;python '+D0+cn+' %d '+str(num)+suf]
 
 elif opt =='1': 
-    fn='yt'
+    fn='yt2'
     suf = ' \n'
     num = 7;cn = 'scripts/runProcessor.py 0.2'
     num = 3;cn = 'scripts/runDownloader.py 0.2'
-    num = 7;cn = 'scripts/runProofreader.py 0'
     num = 8;cn = 'scripts/T_release.py 0'
-    num = 5;cn = 'scripts/runProcessor.py 0.6'
+    num = 7;cn = 'scripts/runProofreader.py 0'
+    num = 7;cn = 'scripts/runProcessor.py 0'
+
+    num = 7;cn = 'scripts/runProofreader.py 4.11'
+    num = 21;cn = 'scripts/runProcessor.py 0.6'
+    num = 11;cn = 'db/anirudh/test_positions.py '
+    num = 11;cn = 'db/anirudh/test_feats.py '
+    num = 7;cn = 'scripts/runProofreader.py -1'
     
     #pp = 'seas_dgx1';tt='0-24:00'
     #pp = 'holyseasgpu';tt='0-24:00'
+    cmd+=['cd ' + D0 + ' \n']
     cmd+=[sa3 + ' vis \n']
     cmd+=['ls;python '+D0+cn+' %d '+str(num)+suf]
 elif opt =='2': 
@@ -54,7 +62,7 @@ elif opt =='2':
     suf = ' \n'
     num = 1;
     do_gpu = True 
-    pp = 'seas_dgx1';tt='0-24:00'
+    #pp = 'seas_dgx1';tt='0-24:00'
     mem = 10000
     #pp = 'holyseasgpu';tt='0-24:00'
     cmd += ['module load cuda/10.2.89-fasrc01 cudnn/7.6.5.32_cuda10.2-fasrc01 \n']
