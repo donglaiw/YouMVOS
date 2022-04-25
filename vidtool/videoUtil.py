@@ -9,6 +9,21 @@ import numpy as np
 import shutil
 from data import secret
 
+def TxtToDict(input_txt, delimiter=':'):
+    # naive data parsing instead of using yaml/yacs
+    params = readtxt(input_txt)
+    output = {}
+    for line in params:
+        if '#' in line or len(line) == 1:
+            continue
+        try:
+            kk, vv = line[:-1].split(delimiter)
+        except:
+            import pdb; pdb.set_trace()
+            raise Exception('Error line: %s' % line[:-1])
+        output[kk.strip()] = vv.strip()
+    return output
+
 def vast2Seg(seg):
     # can't be more than 255 objects...
     if seg.ndim==2:
@@ -57,22 +72,21 @@ def checkVideoTxt(input_file):
     # genre/video_url, author, title 
     videos = readtxt(input_file)
     for line in videos:
-        tmp = line.split(',')
-        if len(tmp) != 3:
-            print("each line should be: genre/video_url, author, title") 
-            raise ValueError('Wrong input format: ', line)
+        if ',' in line:
+            tmp = line.split(',')
+            if len(tmp) != 2:
+                print("each line should be: video_url,genre") 
+                print("or: video_url") 
+                raise ValueError('Wrong input format: ', line)
 
 def VideoTxtToJson(input_txt, output_json, video_folder, frame_folder):
     input_videos = readtxt(input_txt)
     output = {}
     for line in input_videos:
-        video_name, video_author, video_title = line[:-1].split(',')
-        video_url = video_name[video_name.rfind('/') + 1 : ]
+        video_url, video_genre = line[:-1].split(',')
         num_frame = len(glob.glob(frame_folder + video_name + '/frame/*.png'))
         video_size, video_fps, video_duration = getVideoInfo(video_folder + video_name + '/' + video_url + '.mp4')
-        output[video_name] = {'author': video_author,
-                             'title': video_title,
-                             'num_frame': num_frame,
+        output[video_name] = {'num_frame': num_frame,
                              'fps': float(video_fps),
                              'duration': video_duration,
                              'size': [int(x) for x in video_size.split('x')]}
@@ -97,8 +111,9 @@ def remove(fn, opt = ''):
             os.remove(fn)
         else:
             shutil.rmtree(fn)
-def mkdir(fn, opt = 'dir'):
-    if opt == 'dir': 
+
+def mkdir(fn, opt = 'parent'):
+    if opt == 'parent': 
         # Create the folder that the file is in.
         fn = os.path.dirname(fn)
     if not os.path.exists(fn):
@@ -211,6 +226,7 @@ def convertShotToJs(shots, shots_sel = None, frame_rate = 1):
     # need consecutive numbers for easy editing
     # Take the ceil for the start frame.
     # Can be repeated due to frame_rate downsample
+    import pdb; pdb.set_trace()
     if shots.ndim == 1:
         shots = (shots + frame_rate - 1) // frame_rate
     else:
@@ -241,7 +257,7 @@ def getVideoViews(video_url):
     if not os.path.exists(tmp_file):
         os.system('wget "https://www.googleapis.com/youtube/v3/videos?part=statistics&id=%s&key=%s" -O %s' %(video_url, secret.YOUTUBE_API_KEY, tmp_file))
     data = json.load(open(tmp_file))
-    if len(data['items']) >0 and 'statistics' in data['items'][0]:
+    if len(data['items']) >0 and 'statistics' in data['items'][0] and 'viewCount' in data['items'][0]['statistics']:
         return int(data['items'][0]['statistics']['viewCount'])
     else:
         return -1

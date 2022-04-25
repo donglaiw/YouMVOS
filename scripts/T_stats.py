@@ -35,26 +35,32 @@ elif opt[0] =='1': # youtube-vos/vis
         for fn in fns:
             vv = vtool.util.getVideoViews(fn)
             print(fn,vv)
-    elif opt == '1.1': # vos
+    elif opt in ['1.1','1.2']: # vis and vos
         fns = vtool.util.readtxt(Dyt + 'video_url.txt')
         fns_0 = [x[:x.find(' ')] for x in fns]
         fns_1 = [x[x.find(' ')+1:-1] for x in fns]
-        """
-        # vis:
-        cc=[]
-        for mm in ['train','valid','test']:
-            dd = json.load(open(Dyt + 'vis/%s.json'%(mm)))
-            ytn = [x['file_names'][0][:x['file_names'][0].find('/')] for x in dd['videos']]
-            cc += [vtool.util.getVideoViews(fns_1[x]) for x in range(len(fns_0)) if fns_0[x] in ytn] 
-        cc = np.array(cc)
-        print('vis', cc[cc>=0].mean())
-        """
-        # vos:
-        cc=[]
-        for mm in ['train','valid']:
-            dd = json.load(open(Dyt + '../YouTube-VOS/%s/meta.json'%(mm)))
-            ytn = list(dd['videos'].keys())
-            cc += [vtool.util.getVideoViews(fns_1[x]) for x in range(len(fns_0)) if fns_0[x] in ytn] 
-        cc = np.array(cc)
-        print('vos', cc[cc>=0].mean())
+        if opt == '1.1': # vis:
+            cc=[]
+            for mm in ['train','valid','test']:
+                dd = json.load(open(Dyt + 'vis/%s.json'%(mm)))
+                ytn = [x['file_names'][0][:x['file_names'][0].find('/')] for x in dd['videos']]
+                cc += [vtool.util.getVideoViews(fns_1[x]) for x in range(len(fns_0)) if fns_0[x] in ytn] 
+            cc = np.array(cc)
+            print('vis', cc[cc>=0].mean())
+        elif opt == '1.2': # vos:
+            cc=[]
+            for mm in ['train','valid']:
+                dd = json.load(open(Dyt + '../YouTube-VOS/%s/meta.json'%(mm)))
+                ytn = list(dd['videos'].keys())
+                cc += [vtool.util.getVideoViews(fns_1[x]) for x in range(len(fns_0)) if fns_0[x] in ytn] 
+            cc = np.array(cc)
+            print('vos', cc[cc>=0].mean())
+elif opt[0] =='2': # A2D
+    vtool = videoTool()
+    fns = vtool.util.readtxt('/n/pfister_lab2/Lab/vcg_natural/A2D/videoset.csv')
+    ytn = [x[:x.find(',')] for x in fns]
+    cc = [] 
+    cc += [vtool.util.getVideoViews(x) for x in ytn] 
+    cc = np.array(cc)
+    print('a2d', cc[cc>=0].mean())
 

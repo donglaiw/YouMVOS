@@ -1,29 +1,35 @@
 import os,sys,shutil
+import argparse
 from vidtool import videoTool
 import numpy as np
+def get_args():
+    parser = argparse.ArgumentParser(description='Semi-automatic video object segmentation')
+    parser.add_argument('-v','--video', type=str, default='data/video.txt',
+                       help='txt file for video url and category label')
+    parser.add_argument('-p','--param', type=str, default='data/param.txt',
+                       help='txt file for project parameters')
+    parser.add_argument('cmd', type=str, default='',
+                       help='command to execute')
+    parser.add_argument('-jid','--job-id', type=int, default=0,
+                       help='job id')
+    parser.add_argument('-jnum','--job-num', type=int, default=1,
+                       help='job number')
+    args = parser.parse_args()
+    return args
 
 if __name__ == "__main__":
-    opt = sys.argv[1]
-    job_id = 0
-    job_num = 1
-    if len(sys.argv) > 3:
-        job_id = int(sys.argv[2])
-        job_num = int(sys.argv[3])
+    args = get_args()
 
-    vtool = videoTool(job_id, job_num)
+    if args.cmd == '':
+        raise Exception("No command entered.")
 
-    fn = 'data/video_v1'
-    fn = 'data/video_v2'
-    fn = 'data/video_v0'
-    fn = 'data/video'
-    fn = 'data/video_r2'
-    vv=[]
-    #vopt=0;vv=['movie_trailer']
-    
+    vtool = videoTool(args.video, args.param)
+    vtool.process(args.cmd, args.job_id, args.job_num)
+
+   
+    """
     if opt[0] in ['1']:
         vtool.data.setInputVideoJson(fn + '.json')
-    else:
-        vtool.data.setInputVideoTxt(fn + '.txt')
 
     stat = np.zeros(len(vtool.data.video_all_name[job_id::job_num]), int)
 
@@ -44,7 +50,6 @@ if __name__ == "__main__":
         if opt[0] == '0':
             if opt == '0':
                 # Download the mp4 -f 136
-                vtool.downloader.downloadVideoMP4()
             elif opt == '0.1':
                 # Check video size
                 vtool.util.checkVideoSize(vtool.downloader.getVideoPath())
@@ -96,3 +101,4 @@ if __name__ == "__main__":
     if opt in ['1.5']:
         for x in stat[stat>0]:
             print(x)
+    """

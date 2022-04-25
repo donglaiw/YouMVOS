@@ -29,6 +29,7 @@ if __name__ == "__main__":
     fn = 'data/video_v1'
     fn = 'data/video_v2'
     fn = 'data/video'
+    fn = 'data/video_r2'
     vopt=0;vv=['education','product','howto','cartoon','tv']
     vopt=1;vv=['746NhRSrNOY']
     vopt=1;vv=['1NIhv6fCqAU','yZLzLVAUJiU','MFNv-FJFGTg','Fhuc6qOGNPc']
@@ -47,6 +48,8 @@ if __name__ == "__main__":
     #fn = 'data/video_v0';vv=[]
     vtool.data.setInputVideoJson(fn + '.json')
     vv=[]
+    
+    vopt=1;vv=['ozgcKw4MyvY','7GV-pQ00PCs','G5frRzhSNJ8','mnYSMhR3jCI']
     
     tmp_start = 0
     # parallel within each video
@@ -86,6 +89,7 @@ if __name__ == "__main__":
         # Set up the web proofreading for shot detection and classification
         if opt == '0':# shot detection
             vtool.setSingleProcess()
+            print(video_name)
             if not os.path.exists(vtool.data.FOLDER_DOWNLOAD.format(video_name) + 'rgb_max.txt'):
                 vtool.processor.shotDetection()
         elif opt =='0.3': # cluster frames
@@ -119,10 +123,13 @@ if __name__ == "__main__":
                     os.remove(cmd_file)
                 vtool.util.writetxt(cmd_file, ['#/bin/bash'])
                 tmp_start = 1
+            """
             if video_url not in ['wk7qkgS-TTg']:
                 continue
+            """
             # for movie_tralier, compute for all
             frame_ids = frame_ids + 'A_arr'
+            frame_ids = 'all'
             #frame_ids = 'cluster_selected_min'
             vtool.processor.segDetectron2(frame_ids = frame_ids, cmd_file = cmd_file)
 
@@ -186,6 +193,7 @@ if __name__ == "__main__":
             # rename seg files
             video_done = ['product/4RtNDHPq2V4']
             video_done = ['cooking/iUtLMkLhUKY']
+            video_done = ['education/Fhuc6qOGNPc']
             if video_name not in video_done:
                 continue
             output_folder2 = vtool.data.FOLDER_VAST.format(video_name) + 'seg_r2_pf_rename/'
@@ -198,7 +206,7 @@ if __name__ == "__main__":
                     frame_ids_stm = frame_ids[:frame_ids.rfind('_')] + '_arr_every-10'
                     if video_url in ['4RtNDHPq2V4']:
                         frame_ids_stm = frame_ids[:frame_ids.rfind('_')] + '_arr_every-20'
-                    elif video_url in ['iUtLMkLhUKY']:
+                    elif video_url in ['iUtLMkLhUKY','Fhuc6qOGNPc']:
                         frame_ids_stm = frame_ids[:frame_ids.rfind('_')] + '_arr_every-5'
                     frame_ids = vtool.data.getFrameIndex(frame_ids_stm)
                     tmp_st = [int(x[x.find(',')+1:-1]) for x in video_done_all if video_name in x][0]
@@ -216,6 +224,7 @@ if __name__ == "__main__":
         elif opt == '2.21': # dense sample -> 1 FPS
             cmd_file = 'db/run_stm_dense.sh'
             video_done = ['cooking/iUtLMkLhUKY']
+            video_done = ['education/Fhuc6qOGNPc']
             if video_name not in video_done:
                 #pass
                 continue

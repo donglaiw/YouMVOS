@@ -5,77 +5,69 @@ import imageio
 import numpy as np
 
 from . import videoUtil as vutil
-from .videoParam import videoParam 
 
 class videoData(object):
-    def __init__(self, job_id = 0, job_num = 1, redo = False):
-        self.setParams()
-
-        self.job_id = job_id
-        self.job_num = job_num
-        self.redo = redo
-        self.video_all_info = None
-        self.video_all_name = None
+    def __init__(self):
+        pass
    
-    ####
-    # path and filename param
-    # data/param.json
-    def setParams(self):
-        param = videoParam()
-        self.__dict__ = param.__dict__.copy() 
+    def setProjectParam(self, project_txt):
+        result = vutil.TxtToDict(project_txt, '=')
+        for kk in result.keys():
+            self.__dict__[kk] = result[kk]
 
-    ####
-    # I/O for video info
-    # data/video_v0.txt
-    def setInputVideoTxt(self, input_file):
-        vutil.checkVideoTxt(input_file)
-        video_all_info = vutil.readtxt(input_file)
-        self.video_all_name = [line.split(',')[0] for line in video_all_info]
+    def getVideoFolder(self, video_url, video_genre=''):
+        return 
 
-    # after download videos and extract frames
-    # vutil.VideoTxtToJson: generate data/video_v0.json
-    def setInputVideoJson(self, input_file):
-        self.video_all_info = json.load(open(input_file))
-        self.video_all_name = list(self.video_all_info.keys())
+    def getFrameFolder(self, video_folder, frame='frame/'):
+        return os.path.join(video_folder, frame) 
+
+    def getVideoFile(self, video_url, video_folder='./'):
+        return os.path.join(video_folder, video_url+ '.mp4')
+
+    def getFrameFile(self, frame_folder, frame_id = 0):
+        return os.path.join(frame_folder, self.FRAME_FMT % frame_id)
+
+    # define filenames for each video
+    def setVideo(self, video_path):
+        self.video_path = video_path
+        self.video_url = video_path[video_path.rfind('/')+1:] if '/' in video_path else video_path
+
+        self.video_folder = os.path.join(self.VIDEO_ROOT, video_path)
+        self.video_file = os.path.join(self.video_folder, self.video_url+ '.mp4')
+        self.frame_folder = os.path.join(self.video_folder, self.VIDEO_FRAME)
+        self.frame_template = os.path.join(self.frame_folder, self.FRAME_FMT)
+        self.frame_suffix = self.FRAME_FMT[self.FRAME_FMT.rfind('.')+1:]
+        self.stats_folder = os.path.join(self.video_folder, self.VIDEO_STATS)
 
     # current video
-    def setVideoInfo(self, video_name, frame_num = -1, frame_rate = -1):
-        self.video_name = video_name
-        self.video_genre = video_name[:video_name.rfind('/')]
-        self.video_url = video_name[video_name.rfind('/')+1:]
+    def setVideoInfo(self, video_path, frame_num = -1, frame_rate = -1):
+        self.video_path = video_path
+        self.video_genre = video_path[:video_path.rfind('/')]
+        self.video_url = video_path[video_path.rfind('/')+1:]
         self.video_frame_num = frame_num
         self.video_frame_rate = frame_rate
         if self.video_all_info is not None:
             if frame_num < 0:
-                self.video_frame_num = self.video_all_info[video_name]['num_frame']
+                self.video_frame_num = self.video_all_info[video_path]['num_frame']
             if frame_rate < 0:
-                self.video_frame_rate = self.video_all_info[video_name]['fps']
-            self.video_frame_size = self.video_all_info[video_name]['size']
-            self.video_duration = self.video_all_info[video_name]['duration']
-        self.video_frame_rate = int(np.round(self.video_frame_rate))
-        
-        # output 6fps
-        if self.video_frame_rate in [25,30]:
-            self.video_frame_step = 5
-        elif self.video_frame_rate in [24]:
-            self.video_frame_step = 4
-        elif self.video_frame_rate in [27]:
-            self.video_frame_step = 3
-        else:
-            raise ValueError('unknown frame rate %d' % self.video_frame_rate)
+                self.video_frame_rate = self.video_all_info[video_path]['fps']
+            self.video_frame_size = self.video_all_info[video_path]['size']
+            self.video_duration = self.video_all_info[video_path]['duration']
+            self.video_frame_rate = int(np.round(self.video_frame_rate))
+            
+            # output 6fps
+            if self.video_frame_rate in [25,30]:
+                self.video_frame_step = 5
+            elif self.video_frame_rate in [24]:
+                self.video_frame_step = 4
+            elif self.video_frame_rate in [27]:
+                self.video_frame_step = 3
+            else:
+                raise ValueError('unknown frame rate %d' % self.video_frame_rate)
 
 
     ####
     # I/O for frames
-    def getFrameName(self, frame_id = 0, frame_name = None, suffix = ''):
-        if frame_name is None:
-            frame_name = self.FRAME_NAME.format(self.video_name, suffix)
-        if frame_id == -2: # return directory
-            return os.path.dirname(frame_name) + '/'
-        if frame_id >= 0:
-            frame_name = frame_name % frame_id
-        return frame_name 
-
     def getFrameImage(self, frame_id = 0, output_folder = None):
         return imageio.imread(self.getFrameName(frame_id, output_folder))
 
@@ -146,7 +138,7 @@ class videoData(object):
     # I/O for proofreading files
     def getTxt(self, txt_file = None, suf = ''):
         if txt_file is None:
-            txt_file = self.FOLDER_DOWNLOAD.format(self.video_name)
+            txt_file = self.FOLDER_DOWNLOAD.format(self.video_path)
         # input folder -> filename 
         if txt_file[-1] == '/':
             txt_file += suf + '.txt'

@@ -46,14 +46,19 @@ elif opt =='1':
     num = 7;cn = 'scripts/runProofreader.py 0'
     num = 7;cn = 'scripts/runProcessor.py 0'
 
-    num = 7;cn = 'scripts/runProofreader.py 4.11'
     num = 21;cn = 'scripts/runProcessor.py 0.6'
     num = 11;cn = 'db/anirudh/test_positions.py '
     num = 11;cn = 'db/anirudh/test_feats.py '
     num = 7;cn = 'scripts/runProofreader.py -1'
+    num = 21;cn = 'scripts/runProofreader.py 4.11'
+    num = 4;cn = 'scripts/T_iccv.py 2.4'
+    num = 5;cn = 'scripts/T_r2.py 0.2'
+    num = 7;cn = 'scripts/T_cvpr22.py 0.2'
+    num = 7;cn = 'scripts/T_iccv.py 2.13'
     
     #pp = 'seas_dgx1';tt='0-24:00'
     #pp = 'holyseasgpu';tt='0-24:00'
+    # mem = 5000
     cmd+=['cd ' + D0 + ' \n']
     cmd+=[sa3 + ' vis \n']
     cmd+=['ls;python '+D0+cn+' %d '+str(num)+suf]

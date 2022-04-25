@@ -19,12 +19,14 @@ Di=Dv+'{}/frame/image_%05d.png'
 Dw='/n/boslfs02/LABS/lichtman_lab/glichtman/public/vcg/youtop-vis/youtube/'
 
 if opt[0] == '0':
-    videos = json.load(open('data/video.json'))
+    videos = json.load(open('data/video_v0.json'))
+    videos = json.load(open('data/video_r2.json'))
     video_names = videos.keys()
 
     if opt == '0': # get jpg images
         Do = Dv + 'release/JPEGImages/'
         #video_names=['cooking/3nUKwvFsjA4']
+        video_names=['pet/ozgcKw4MyvY','cooking/7GV-pQ00PCs','howto/G5frRzhSNJ8','education/mnYSMhR3jCI']
         for video_name in video_names:
             print(video_name)
             fps = int(np.round(videos[video_name]['fps']))
@@ -86,7 +88,7 @@ if opt[0] == '0':
     elif opt == '0.2': # check number
         Do = Dv + 'release/Annotations/'
         for video_name in video_names:
-            print(video_name)
+            #print(video_name)
             fps = int(np.round(videos[video_name]['fps']))
             num_im = videos[video_name]['num_frame']
             if fps in [25,30]:
@@ -99,8 +101,26 @@ if opt[0] == '0':
             num_6fps = (num_im + step - 1) // step
             num = len(glob(Do2 + '/*.png'))
             if num != num_6fps:
-                print(num, num_6fps)
-                import pdb; pdb.set_trace()
+                print(video_name,num, num_6fps)
+    elif opt == '0.21': # total number
+        Do = Dv + 'release/Annotations/'
+        cc = np.zeros([200])
+        for vid,video_name in enumerate(video_names):
+            print(video_name)
+            fps = int(np.round(videos[video_name]['fps']))
+            num_im = videos[video_name]['num_frame']
+            if fps in [25,30]:
+                step = 5
+            elif fps in [24]:
+                step = 4
+            elif fps in [27]:
+                step = 3
+            cc[vid] = (num_im + step - 1) // step
+        print(cc.sum())
+        # 381K
+        import pdb; pdb.set_trace()
+
+
 
 elif opt[0] == '1':
     videos = json.load(open('data/video.json'))
@@ -165,7 +185,7 @@ elif opt[0] == '3':
 
     if opt == '3': # avg view
         sn = Do + 'genre_view.txt'
-        if False:# os.path.exists(sn):
+        if os.path.exists(sn):
             import pdb; pdb.set_trace()
             stat = np.loadtxt(sn).astype(int)
         else:
@@ -173,9 +193,9 @@ elif opt[0] == '3':
             for vid, video_name in enumerate(video_names):
                 video_url = video_name[video_name.rfind('/')+1:]
                 stat[vid] = vtool.util.getVideoViews(video_url)
-            import pdb; pdb.set_trace()
             np.savetxt(sn, stat.reshape(10,-1).mean(axis=1),'%d')
         print(stat.mean())
+        import pdb; pdb.set_trace()
         print(np.argsort(-stat.reshape(10,-1).mean(axis=1)))
     elif opt == '3.01': # avg view
         genres = [x[:x.find('/')] for x in video_names[::20]]
@@ -212,15 +232,16 @@ elif opt[0] == '3':
 
 
     elif opt == '3.2': # #instance for test
-        video_names = [x[:-1] for x in vtool.util.readtxt('data/split/yt_test.txt')]
-        stat = np.zeros(len(video_names), int)
-        for vid, video_name in enumerate(video_names):
-            sn = Dv + video_name + '/seg_prop_out.txt'
-            if os.path.exists(sn):
-                dd = vtool.util.readtxt(sn)
-                stat[vid] = len(dd)
-        print(stat)
-        print(stat.min())
+        for nn in ['train','val','test']:
+            video_names = [x[:-1] for x in vtool.util.readtxt('data/iccv_%s.txt'%nn)]
+            stat = np.zeros(len(video_names), int)
+            for vid, video_name in enumerate(video_names):
+                sn = Dv + video_name[:-12]+'/'+video_name[-11:] + '/seg_prop_out.txt'
+                if True:#os.path.exists(sn):
+                    dd = vtool.util.readtxt(sn)
+                    stat[vid] = len(dd)
+            #print(stat)
+            print(stat.sum())
 
 
 
@@ -369,19 +390,16 @@ elif opt[0] == '3':
                 sc[i] = (4*np.pi*(seg>0).sum())/(perimeter(seg)**2)
             print(sc)
             print(','.join(['%.04f'%x for x in sc]))
-
-
-
-    elif opt == '3.4': # instance count
+    elif opt == '3.4': # dsp pages
         pp = 'https://lichtman.rc.fas.harvard.edu/vcg/youtop-vis/youtube/proofread/'
         genres = [x[:x.find('/')] for x in video_names[::20]]
         for x in genres:
             print(pp + x + '/test/dsp_character.html')
-    elif opt == '3.41': # instance count
+    elif opt == '3.41': # video names
         for x in video_names:
             print(x)
 
-    # fig.4
+    # fig.4d/e
     elif opt == '3.5': # instance count
         from glob import glob
         nns = ['feats','positions']
@@ -395,8 +413,27 @@ elif opt[0] == '3':
                 cross[fid] = np.loadtxt(fc[fid])
             np.savetxt('db/anirudh/same_%s.txt'%nn, np.hstack(same), '%.4f')
             np.savetxt('db/anirudh/cross_%s.txt'%nn, np.hstack(cross), '%.4f')
+
+    elif opt == '3.51': # number of transitions
+        c0 = 0
+        c1 = 0
+        for x in video_names:
+            aa = np.loadtxt(Dv + 'release/Annotations/' + x.replace('/','_') + '/shot.txt').astype(int)
+            c0 += (aa[1:,2]!=2).sum()
+            c1 += (aa[1:,2]==2).sum()
+    elif opt == '3.52': # number of shots by split
+        for nn in ['train','val','test']:
+            c0 = 0
+            c1 = 0
+            video_names = vtool.util.readtxt('data/iccv_%s.txt'%nn)
+            for x in video_names:
+                aa = np.loadtxt(Dv + 'release/Annotations/' + x[:-1] + '/shot.txt').astype(int)
+                c0 += (aa[1:,2]!=2).sum()
+                c1 += (aa[1:,2]==2).sum()
+            print(c0-c1)
+
     # fig 1
-    elif opt == '3.6': # instance count
+    elif opt == '3.6': # seg -> color
         from skimage.color import label2rgb
         clr = np.array(['black', 'green', 'blue', 'red', 'magenta', 'cyan', 'yellowgreen', 'red', 'pink', 'indigo', 'green'])
         for i in range(4):

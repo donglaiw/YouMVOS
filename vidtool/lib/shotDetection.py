@@ -3,16 +3,19 @@ import os
 from glob import glob
 from imageio import imread
 from skimage.measure import label
+from .. import videoUtil as vutil
 
 
 class shotDetection(object):
-    def __init__(self, stat_folder, image_template = 'frame/image_%05d.png'):
-        self.stat_folder = stat_folder
-        self.image_template = image_template
+    def __init__(self):
+        pass
 
     # 1. Shot detection
-    def setFolder(self, stat_folder):
+    def setFolder(self, image_template, stat_folder):
         self.stat_folder = stat_folder
+        self.image_template = image_template
+        self.image_folder = os.path.dirname(image_template)
+        self.image_suffix = image_template[image_template.rfind('.')+1:]
 
     def getStat(self, stat):
         stat_path = self.stat_folder + ('%s.txt'%stat)
@@ -22,25 +25,26 @@ class shotDetection(object):
 
     def computeMaxDiff(self, job_id = 0, job_num = 1, frame_downsample=4):
         if job_num != 1: # for long movies
-            output_path_max = self.stat_folder + 'rgb_max/'
-            output_path_diff = self.stat_folder + 'rgb_diff/'
+            output_path_max = os.path.join(self.stat_folder, 'rgb_max/')
+            output_path_diff = os.path.join(self.stat_folder, 'rgb_diff/')
             if job_id == 0: # avoid multiple thread conflicts
-                U_mkdir(output_path_max)
-                U_mkdir(output_path_diff)
-            output_file_max = output_path_max + '%d_%d.txt'%(job_id, self.job_num)
-            output_file_diff = output_path_diff + '%d_%d.txt'%(job_id, self.job_num)
+                vutil.mkdir(output_path_max)
+                vutil.mkdir(output_path_diff)
+            output_file_max = os.path.join(output_path_max, '%d_%d.txt'%(job_id, job_num))
+            output_file_diff = os.path.join(output_path_diff, '%d_%d.txt'%(job_id, job_num))
         else: # for short videos
-            output_file_max = self.stat_folder+'rgb_max.txt'
-            output_file_diff = self.stat_folder+'rgb_diff.txt'
+            output_file_max = os.path.join(self.stat_folder, 'rgb_max.txt')
+            output_file_diff = os.path.join(self.stat_folder, 'rgb_diff.txt')
 
         do_max = not os.path.exists(output_file_max)
         do_diff = not os.path.exists(output_file_diff)
         if do_max or do_diff:
             print('compute max/diff')
-            frame_names = sorted(glob(os.path.dirname(self.stat_folder + self.image_template) + '/*.png'))
+
+            frame_names = sorted(glob(os.path.join(self.image_folder, '*.'+self.image_suffix)))
             frame_num = len(frame_names)
             if frame_num == 0:
-                raise ValueError('No images: %s' % (self.stat_folder + self.image_template))
+                raise ValueError('No images: %s' % self.image_template)
             # not using the last frame
             num_per_job = (frame_num + job_num - 1) // job_num
             # not using the last frame
@@ -64,15 +68,15 @@ class shotDetection(object):
             if frame_range[-1] == frame_num-2:
                 output_max[-1] = frame_next.max()
 
-            np.savetxt(output_file_max, output_max, '%d')
             np.savetxt(output_file_diff, output_diff, '%d')
+            np.savetxt(output_file_max, output_max, '%d')
 
     def computeMaxDiffCombine(self):
         for name in ['rgb_diff', 'rgb_max']:
-            output_path = self.stat_folder+name
+            output_path = os.path.join(self.stat_folder, name)
             output_file = output_path+'.txt'
             if not os.path.exists(output_file):
-                result_file = glob(output_path+'/*.txt')
+                result_file = glob(os.path.join(output_path, '*.txt'))
                 num_result = len(result_file)
                 if num_result == 0:
                     raise ValueError('Empty Folder: ',output_path)
@@ -101,10 +105,12 @@ class shotDetection(object):
         if thres_shot_len == 0:
             raise ValueError('thres_shot_len must be bigger than 0')
 
-        output_file = self.stat_folder+'shot.txt'
+        output_file = os.path.join(self.stat_folder, 'shot.txt')
         if not os.path.exists(output_file):
-            rgb_max = np.loadtxt(self.stat_folder + 'rgb_max.txt').astype(int)
-            rgb_diff = np.loadtxt(self.stat_folder + 'rgb_diff.txt').astype(int)
+            # if file not exist, combine separate files
+            self.computeMaxDiffCombine()
+            rgb_max = np.loadtxt(os.path.join(self.stat_folder, 'rgb_max.txt')).astype(int)
+            rgb_diff = np.loadtxt(os.path.join(self.stat_folder, 'rgb_diff.txt')).astype(int)
             
             # Break the video by dark frames.
             frame_chunk = label(rgb_max >= thres_dark)
@@ -133,5 +139,4 @@ class shotDetection(object):
                     output[chunk_id] = frame_id[0]+np.vstack([frame_change_v2[:-1]+1, frame_change_v2[1:]]).T
                 else:
                     output[chunk_id] = [frame_id[0], frame_id[-1]]
-            
             np.savetxt(output_file, np.vstack(output), '%d')

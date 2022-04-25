@@ -1,0 +1,31 @@
+# library path
+LIB_DETECTRON2 = "/n/pfister_lab2/Lab/donglai/lib/pipeline/detectron2/"
+LIB_STM = "/n/pfister_lab2/Lab/donglai/lib/pipeline/STM/"
+LIB_FFMPEG = "/n/home04/donglai/local/bin/ffmpeg "
+
+
+# video folder
+VIDEO_ROOT = "/n/pfister_lab2/Lab/vcg_natural/YouTop200/"
+VIDEO_FRAME = 'frame/'
+VIDEO_STATS = ''
+VIDEO_RELEASE = "release/"
+FRAME_FMT = 'image_%05d.png'
+
+# for desktop annotation: need windows machine
+VAST_ROOT = "/n/boslfs02/LABS/lichtman_lab/donglai/youtop/"
+VAST_DETECTON2 = "seg/seg_%05d.png"
+VAST_STM = "seg_prop/seg_%05d.png"
+VAST_STM2 = "seg_prop_out/seg_%05d.png"
+VAST_FRAME = "im/"
+
+# for web annotation: server
+WEB_ROOT = "/n/boslfs02/LABS/lichtman_lab/glichtman/public/vcg/youtop-vis/youtube/"
+WEB_FRAME = "frame_ds/"
+# proofreader filename and path
+WEB_GIF = "gif/{}_{}.gif"
+# video genre, video url, suffix
+WEB_HTML_TEST = "%s/test/%s%s.html" 
+# video genre, video url, suffix
+WEB_JS_SAVE = "%s/saved/%s%s.js"
+# video_name, prefix, frame_index
+WEB_SEG = "seg_ds/{}/{}%05d.png"

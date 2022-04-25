@@ -17,7 +17,7 @@ if __name__ == "__main__":
   
     fn = 'db/round2-3/bad.txt'
     vvv = [x[:-1] for x in vtool.util.readtxt(fn)]
-    #vvv = []
+    vvv = []
     fn = 'data/video_v0'
     #fn = 'data/yt_train'
     #fn = 'data/yt_val'
@@ -28,6 +28,7 @@ if __name__ == "__main__":
     fn = 'data/video_v1'
     fn = 'data/video_v2'
     fn = 'data/video'
+    fn = 'data/video_r2'
     vopt=1;vv=['8GwmRn0_Y-Y']
     vopt=1;vv=['enkRALcdPb0','xESsYrYxVDA']
     vopt=1;vv=['1NIhv6fCqAU','yZLzLVAUJiU','MFNv-FJFGTg','Fhuc6qOGNPc']
@@ -42,6 +43,8 @@ if __name__ == "__main__":
     #fn = 'data/video_v0';vv=[]
     #vopt=0;vv=['kid']
     vv=[]
+    vopt=1;vv=['dfToHzOmwdI']
+    vopt=1;vv=['ozgcKw4MyvY','7GV-pQ00PCs','G5frRzhSNJ8','mnYSMhR3jCI']
 
     vtool.data.setInputVideoJson(fn + '.json')
     
@@ -83,7 +86,9 @@ if __name__ == "__main__":
                 if len(vvv)>0 and video_name not in vvv:
                     continue
 
-                #vtool.proofreader.webProofreadShot()
+                vtool.proofreader.webProofreadShot()
+
+                """
                 frame_ids = 'cluster_selected_arr' 
                 if video_genre in ['music_video'] and video_url not in ['iS1g8G_njx8']:
                     frame_ids = 'shot_selected_arr' 
@@ -103,6 +108,7 @@ if __name__ == "__main__":
                 # import pdb; pdb.set_trace()
                 # vtool.proofreader.webProofreadCluster()
 
+                """
             elif opt == '0.11':
                 # 6 FPS: Generate htmls/js
                 #vtool.setRedo(True)
@@ -232,8 +238,10 @@ if __name__ == "__main__":
                     vtool.visualizer.visSegPng(output_prefix='manual_', frame_ids = frame_ids, mask_template = mask_template, mask_id_func=mask_id_func)
                 elif opt in ['4.1', '4.11']: # stm mask display
                     # stm: 1fps label for VAST import
+                    """
                     if video_name not in vvv:
                         continue
+                    """
                     # movie_trailer
                     #fn = '/seg_all_out/';frame_ids = 'all'; 
                     #mask_id_func = lambda x: (x-1)/vtool.data.video_frame_rate
@@ -259,7 +267,8 @@ if __name__ == "__main__":
                         output_prefix = 'stm_out_'
 
                     if video_url in ['RB-RcX5DS5A']:
-                        continue
+                        pass
+                        #continue
                     vtool.setRedo(True)
                     print(video_name)
                     vtool.visualizer.visSegPng(output_prefix=output_prefix, frame_ids = frame_ids, \
