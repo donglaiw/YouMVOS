@@ -4,6 +4,7 @@ import subprocess
 import json
 from scipy.ndimage import zoom
 from skimage.color import label2rgb, rgb2gray
+from skimage.measure import label
 import imageio
 import numpy as np
 import shutil
@@ -57,7 +58,7 @@ def downloadVideo(video_url, output_mp4 = None, option=136):
             video_url = 'https://www.youtube.com/watch?v=' + video_url
         cmd = "youtube-dl --no-check-certificate -f %d "%option + video_url + " -o " + output_mp4
         print(cmd)
-        mkdir(output_mp4, 'dir')
+        mkdir(output_mp4)
         os.system(cmd)
 
 def checkVideoSize(input_mp4, desired_size = '1280x'):
@@ -112,7 +113,14 @@ def remove(fn, opt = ''):
         else:
             shutil.rmtree(fn)
 
-def mkdir(fn, opt = 'parent'):
+def rm(fn):
+    if os.path.exists(fn):
+        if os.path.isdir(fn):
+            shutil.rmtree(fn)
+        else:
+            os.remove(fn)
+
+def mkdir(fn, opt = ''):
     if opt == 'parent': 
         # Create the folder that the file is in.
         fn = os.path.dirname(fn)
@@ -180,7 +188,10 @@ def convertClusterStrToClusterList(cluster_str):
                 tmp = [int(z) for z in y.split('-')]
                 out += range(tmp[0], tmp[1]+1)
             else:
-                out += [int(y)]
+                try:
+                    out += [int(y)]
+                except:
+                    import pdb; pdb.set_trace()
         cluster_list[i] = out
     return cluster_list
 
@@ -211,22 +222,21 @@ def convertClusterListToShot(clusters, clusters_sel, frame_rate=1):
     sid = np.argsort(shots[:,0])
     return shots[sid], np.array(shots_sel)[sid]
 
-def convertClusterToJs(shots):
-    if isinstance(shots, list):
-        num_shots = len(shots)
-        cluster_str = convertClusterListToStr(shots)
-    elif isinstance(shots, np.ndarray):
-        cluster_str = convertClusterArrToStr(shots)
-        num_shots = shots.max()
+def convertClusterToJs(clusters):
+    if isinstance(clusters, list):
+        num_clusters = len(clusters)
+        cluster_str = convertClusterListToStr(clusters)
+    elif isinstance(clusters, np.ndarray):
+        cluster_str = convertClusterArrToStr(clusters)
+        num_clusters = clusters.max()
     output_js = 'var shot_index_str="' + cluster_str + '";'
-    output_js += 'var shot_selection_str="' + ','.join('0'*num_shots) + '";'
+    output_js += 'var shot_selection_str="' + ','.join('0'*num_clusters) + '";'
     return output_js
 
 def convertShotToJs(shots, shots_sel = None, frame_rate = 1):
     # need consecutive numbers for easy editing
     # Take the ceil for the start frame.
     # Can be repeated due to frame_rate downsample
-    import pdb; pdb.set_trace()
     if shots.ndim == 1:
         shots = (shots + frame_rate - 1) // frame_rate
     else:
@@ -271,3 +281,63 @@ def getVideoFrameStep(fps):
         fps = 3
     return fps
 
+def get_bb(seg, do_count=False):
+    dim = len(seg.shape)
+    a=np.where(seg>0)
+    if len(a[0])==0:
+        return [-1]*dim*2
+    out=[]
+    for i in range(dim):
+        out+=[a[i].min(), a[i].max()]
+    if do_count:
+        out+=[len(a[0])]
+    return out
+
+def removeArr(arr1, arr2, invert=True):
+    return np.array(arr1)[np.in1d(arr1, arr2, invert=invert)]
+
+def getNumDigit(num):
+    return int(np.ceil(np.log10(num)))
+
+def flatList(li, do_arr=True):
+    li2 = [x for xs in li for x in xs]
+    if do_arr:
+        li2 = np.array(li2)
+    return li2
+
+def extractIdFolder(fn, ext='.png', shift=1):
+    fns = glob.glob(os.path.join(fn, '*' + ext))
+    fid = sorted([extractIdFile(x, shift) for x in fns])
+    return fid
+
+def extractIdFile(fn, shift=1):
+    return int(fn[fn.rfind('_')+shift : fn.rfind('.')])
+
+def postprocessSeg(input_names, output_names, black_frame=None, sz_thres = 0, redo=True):
+    for fn_in, fn_out in zip(input_names, output_names): 
+        if redo or not os.path.exists(fn_out):
+            # add black frame
+            seg = imageio.imread(fn_in)
+            seg = addBlackFrame(seg, black_frame)
+            seg = removeSmall(seg, sz_thres)
+            imageio.imwrite(fn_out, seg)
+
+def addBlackFrame(seg, black_frame=None):
+    if black_frame is not None:
+        seg[:black_frame[0]] = 0
+        seg[black_frame[2]+1:] = 0
+        seg[:, :black_frame[1]] = 0
+        seg[:, black_frame[3]+1:] = 0
+    return seg
+
+def removeSmall(seg, sz_thres):
+    if sz_thres > 0:
+        # remove small seg
+        sids = np.unique(seg[seg>0])
+        for sid in sids:
+            ll = label(seg==sid)
+            ui,uc = np.unique(ll[ll>0], return_counts=True)
+            rl = np.zeros(ui.max()+1, np.uint8)
+            rl[ui[uc>sz_thres]] = 1
+            seg = seg * rl[ll]
+    return seg

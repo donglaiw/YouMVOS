@@ -7,7 +7,7 @@ from torch.autograd import Variable
 
 class featureExtractor(object):
     def __init__(self, model_name='resnet18', layer_name='avgpool', do_gpu = True):
-        self.do_gpu = do_gpu
+        self.do_gpu = do_gpu and torch.cuda.is_available()
         # prepare data
         self.scaler = transforms.Scale((224, 224))
         self.normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],

@@ -4,7 +4,7 @@ from vidtool import videoTool
 import numpy as np
 def get_args():
     parser = argparse.ArgumentParser(description='Semi-automatic video object segmentation')
-    parser.add_argument('-v','--video', type=str, default='data/video.txt',
+    parser.add_argument('-v','--video', type=str, default='data/video_rest.txt',
                        help='txt file for video url and category label')
     parser.add_argument('-p','--param', type=str, default='data/param.txt',
                        help='txt file for project parameters')
@@ -14,6 +14,8 @@ def get_args():
                        help='job id')
     parser.add_argument('-jnum','--job-num', type=int, default=1,
                        help='job number')
+    parser.add_argument('--redo', action='store_true',
+                       help='redo')
     args = parser.parse_args()
     return args
 
@@ -24,6 +26,8 @@ if __name__ == "__main__":
         raise Exception("No command entered.")
 
     vtool = videoTool(args.video, args.param)
+    vtool.setRedo(args.redo)
+
     vtool.process(args.cmd, args.job_id, args.job_num)
 
    

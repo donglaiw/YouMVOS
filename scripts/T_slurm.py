@@ -55,6 +55,7 @@ elif opt =='1':
     num = 5;cn = 'scripts/T_r2.py 0.2'
     num = 7;cn = 'scripts/T_cvpr22.py 0.2'
     num = 7;cn = 'scripts/T_iccv.py 2.13'
+    num = 17;cn = 'scripts/T_refactor.py 5.11'
     
     #pp = 'seas_dgx1';tt='0-24:00'
     #pp = 'holyseasgpu';tt='0-24:00'

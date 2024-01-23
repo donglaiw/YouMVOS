@@ -8,7 +8,10 @@ from . import videoUtil as vutil
 
 class videoVisualizer(object):
     def __init__(self):
-        pass
+        self.redo = False
+
+    def setRedo(self, redo):
+        self.redo = redo
 
     def visClipGif(self, frame_folder = None, output_file = None, frame_stride = 1, frame_num = -1, frame_duration = 0.2, frame_type = 'video'):
         if frame_folder is None:
@@ -17,7 +20,7 @@ class videoVisualizer(object):
             output_file = (self.data.PROOFREADER_GIF.format(self.data.video_name, frame_type))
 
         if not os.path.exists(output_file):
-            vutil.mkdir(output_file, 'dir')
+            vutil.mkdir(output_file, 'parent')
             frame_names = sorted(glob(frame_folder + '/*.png')) 
 
             if len(frame_names) == 0:
@@ -80,26 +83,30 @@ class videoVisualizer(object):
                 output[i] = im
             writegif(output_file, output, duration = frame_duration)
 
-    def visSegPng(self, image_template=None, mask_template=None, output_template=None, output_prefix='refine_', frame_ids=None, frame_downsample = 4, mask_id_func = None):
-        if image_template is None:
-            image_template = self.data.FRAME_NAME.format(self.data.video_name, '_ds')
-        if mask_template is None:
-            mask_template = self.data.PROCESSOR_STM.format(self.data.video_name)
-        if output_template is None:
-            output_template = self.data.PROOFREADER_SEG.format(self.data.video_name, output_prefix)
-
-        if isinstance(frame_ids, str):
-            frame_ids = self.data.getFrameIndex(frame_ids)
-        vutil.mkdir(output_template, 'dir')
+    def visSegPng(self, image_template, mask_template, output_template, frame_ids, image_downsample = 1, mask_downsample = 1, mask_id_func = None):
+        vutil.mkdir(output_template, 'parent')
         for frame_id in frame_ids:
             output_name = output_template % frame_id
+            image_name = image_template % frame_id 
             if mask_id_func is None:
                 mask_name = mask_template % frame_id 
             else:
                 mask_name = mask_template % mask_id_func(frame_id) 
-            if os.path.exists(mask_name) and (self.data.redo or not os.path.exists(output_name)):
+            if os.path.exists(mask_name) and (self.redo or not os.path.exists(output_name)):
+                im = imageio.imread(image_name)[::image_downsample, ::image_downsample]
+                seg = vutil.vast2Seg(imageio.imread(mask_name)[::mask_downsample, ::mask_downsample])
+                """
+                # hacky: fix image size
+                if im.shape[0] == 2*seg.shape[0]:
+                    im = im[::2, ::2]
+                    imageio.imwrite(image_name, im) 
+                if seg.shape[0] == 320:
+                    imageio.imwrite(mask_name, imageio.imread(mask_name).transpose()) 
+                    seg = seg.transpose()
+                """
 
-                im = self.data.getFrameImage(frame_id)[::frame_downsample, ::frame_downsample]
-                seg = vutil.vast2Seg(imageio.imread(mask_name)[::frame_downsample, ::frame_downsample])
-                #print(frame_id,mask_name)
-                imageio.imwrite(output_name, vutil.visSeg(im, seg))
+                try:
+                    imageio.imwrite(output_name, vutil.visSeg(im, seg))
+                except:
+                    print(im.shape, seg.shape)
+                    import pdb; pdb.set_trace()

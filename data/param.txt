@@ -4,28 +4,38 @@ LIB_STM = "/n/pfister_lab2/Lab/donglai/lib/pipeline/STM/"
 LIB_FFMPEG = "/n/home04/donglai/local/bin/ffmpeg "
 
 
+RELEASE_ROOT = "/n/pfister_lab2/Lab/vcg_natural/YouTop200/release/"
+RELEASE_FRAME = "JPEGImages"
+RELEASE_FRAME_FMT = '%05d.jpg'
+RELEASE_SEG = "Annotations"
+RELEASE_SEG_FMT = '%05d.png'
+
 # video folder
 VIDEO_ROOT = "/n/pfister_lab2/Lab/vcg_natural/YouTop200/"
 VIDEO_FRAME = 'frame/'
 VIDEO_STATS = ''
-VIDEO_RELEASE = "release/"
 FRAME_FMT = 'image_%05d.png'
+FRAME_SAMPLE_NUM = 30
+SEG_FMT = 'seg_%05d.png'
+SEG_THRES = 25
+FRAME_OFFSET = 1
 
 # for desktop annotation: need windows machine
 VAST_ROOT = "/n/boslfs02/LABS/lichtman_lab/donglai/youtop/"
-VAST_DETECTON2 = "seg/seg_%05d.png"
-VAST_STM = "seg_prop/seg_%05d.png"
-VAST_STM2 = "seg_prop_out/seg_%05d.png"
+VAST_DETECTRON2 = "seg"
+VAST_CLUSTER = "seg_cluster"
+VAST_STM = "seg_prop{}"
 VAST_FRAME = "im/"
 
 # for web annotation: server
+WEB_SERVER = "https://lichtman.rc.fas.harvard.edu/vcg/youtop-vis/youtube/"
+WEB_SERVER = "https://rhoana.rc.fas.harvard.edu/youtop200/"
 WEB_ROOT = "/n/boslfs02/LABS/lichtman_lab/glichtman/public/vcg/youtop-vis/youtube/"
-WEB_FRAME = "frame_ds/"
+WEB_ROOT = "/n/pfister_lab2/Lab/public/youtop200/"
+WEB_FRAME = "frame_ds"
+WEB_PROOFREAD = "proofread"
+WEB_FRAME_WIDTH = 320
 # proofreader filename and path
-WEB_GIF = "gif/{}_{}.gif"
-# video genre, video url, suffix
-WEB_HTML_TEST = "%s/test/%s%s.html" 
-# video genre, video url, suffix
-WEB_JS_SAVE = "%s/saved/%s%s.js"
+WEB_GIF = "gif"
 # video_name, prefix, frame_index
-WEB_SEG = "seg_ds/{}/{}%05d.png"
+WEB_SEG = "seg_ds"

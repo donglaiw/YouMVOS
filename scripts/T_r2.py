@@ -134,10 +134,9 @@ elif opt[0] == '2': # updated mask
                 print(v[:-1])
 elif opt[0] == '3': # zip
     if opt == '3':
-        for nn in ['train','val','test']:
+        for nn in ['train','val','test'][:1]:
             vvs = readtxt(Dr+'info/cvpr2022_%s.txt'%nn)
             cmd = 'zip -r %s_frame.zip '%nn
             for vv in vvs:
                 cmd += '%s '% vv[:-1]
             print(cmd)
-            import pdb; pdb.set_trace()

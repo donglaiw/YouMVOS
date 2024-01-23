@@ -12,19 +12,15 @@ from glob import glob
 from .featureExtractor import featureExtractor
 
 class frameCluster(object):
-    def __init__(self, image_list = None, frame_rate = 1):
+    def __init__(self, image_list = None):
         self.feature_extractor = featureExtractor()
-        self.setInfo(image_list, frame_rate)
+        self.setInfo(image_list)
 
-    def setInfo(self, image_list, frame_rate = 1):
+    def setInfo(self, image_list):
         if isinstance(image_list, str): # if input the folder+*.png
             self.image_list = sorted(glob(image_list))
         else:
             self.image_list = image_list
-        self.frame_rate = frame_rate
-
-    def clusterIdToStr(self, cluster_ids): 
-        return ';'.join([','.join([str(1+self.frame_rate*y) for y in np.where(cluster_ids==x)[0]]) for x in np.unique(cluster_ids)]) 
 
     def getClusterId(self, sim_nn=0.86, sim_small=[5,0.8], metric ='cosine'):
         # first pass: get initial cluster centers
@@ -84,4 +80,3 @@ class frameCluster(object):
         if metric == 'cosine':
            dist = 1 - cdist(embedding1, embedding2, metric).squeeze() 
         return dist
-

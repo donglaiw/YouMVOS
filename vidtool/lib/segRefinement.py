@@ -56,10 +56,10 @@ class segRefinement(object):
     iter_image = 2
     instance_pixs = np.sum(seg == val)
 
-    for iter in range(self.erode_iter[0], self.erode_iter[1], 2):
+    for i in range(self.erode_iter[0], self.erode_iter[1], 2):
       mask_in = binary_erosion(mask_in == val)
       if np.sum(mask_in)/instance_pixs < self.erode_ratio: break
-      iter_image = iter
+      iter_image = i
       eroded_mask = mask_in
 
     return eroded_mask, iter_image

@@ -20,7 +20,9 @@ VAST_FRAME = "im/"
 
 # for web annotation: server
 WEB_ROOT = "/n/boslfs02/LABS/lichtman_lab/glichtman/public/vcg/youtop-vis/youtube/"
-WEB_FRAME = "frame_ds/"
+WEB_FRAME = "frame_ds"
+WEB_HTML = os.path.join("proofread", "html")
+WEB_RESULT = os.path.join("proofread", "result")
 # proofreader filename and path
 WEB_GIF = "gif/{}_{}.gif"
 # video genre, video url, suffix

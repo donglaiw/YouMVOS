@@ -96,6 +96,7 @@ elif opt[0] == '1': # count number of instances
         fn = 'seg_prop_out'
         num = np.zeros(200) # obj
         num2 = np.zeros(200) # mask
+        num3 = [None] * 200 # switch
         for vid,video_name in enumerate(video_names):
             print(video_name)
             vtool.data.setVideoInfo(video_name)
@@ -104,6 +105,8 @@ elif opt[0] == '1': # count number of instances
                 data = vtool.util.readtxt(output_txt)
                 num[vid] = len(data)
                 num2[vid] = sum([x.count(',') for x in data]) 
+                tmp = np.array([int(y) for y in x[x.find(',')+1:].split(',')]) for x in data])
+                num3[vid] = sum([x.count(',') for x in data]) 
         #print([video_names[x] for x in np.where(num>10)[0]])
         #print([video_names[x] for x in np.where(num==1)[0]])
         import pdb; pdb.set_trace()

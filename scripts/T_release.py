@@ -16,12 +16,12 @@ Dv = '/n/pfister_lab2/Lab/vcg_natural/YouTop200/'
 Dvr = Dv + 'release/'
 Ds='/n/pfister_lab2/Lab/donglai/YouTop200/db/share/{}/seg_prop_out/seg_%05d.png'
 Di=Dv+'{}/frame/image_%05d.png'
-Dw='/n/boslfs02/LABS/lichtman_lab/glichtman/public/vcg/youtop-vis/youtube/'
+Dw='/n/pfister_lab2/Lab/public/youtop200/'
 
 if opt[0] == '0':
-    videos = json.load(open('data/video_v0.json'))
-    videos = json.load(open('data/video_r2.json'))
-    video_names = videos.keys()
+    #videos = json.load(open('data/video_v0.json'))
+    videos = json.load(open('data/video_rest.json'))
+    #video_names = videos.keys()
 
     if opt == '0': # get jpg images
         Do = Dv + 'release/JPEGImages/'
@@ -56,6 +56,9 @@ if opt[0] == '0':
         video_names = ["music_video/pRpeEdMmmQ0","cooking/iUtLMkLhUKY","tv/0oPa3GJJDDA","product/4RtNDHPq2V4"]
         video_names = ["product/4RtNDHPq2V4"]
         video_names = ['cooking/iUtLMkLhUKY','howto/wk7qkgS-TTg']
+        # 2022/06/02
+        video_names = ["pet/YChHbz5VVoM","pet/_AtP7au_Q9w","pet/joEvL8gMVRM","pet/LPjblqE3xHk","product/-D-mo8qBeGA","product/3OhZjfwi1Rs","product/5dsVwXzOIjk","product/9GysUQfI3ZQ","product/enkRALcdPb0"]
+        video_names = ["sports/GVdOB4nA7eI","sports/NzYtFLpJrQU","sports/f3CBJLAneCA","education/YtvP5A5OHpU","tv/BJXq83_GvY8","tv/JDjSHmQz1U0","tv/aps0UBdLnzE","tv/qVMW_1aZXRk","education/3ank52Zi_S0","education/tBVUTFPate0","education/d0nfzeLXuyY","education/YtvP5A5OHpU","education/XOLOLrUBRBY","education/MFNv-FJFGTg","education/Fhuc6qOGNPc","cooking/2c18PX9acwU","cooking/3nUKwvFsjA4","howto/qsxcVsFDDoA","howto/wk7qkgS-TTg","howto/0dB7JjpBMtI","howto/GibMs1kod2Y","howto/aSqeWUuQSlM","howto/lHzTcRqSOhc","howto/j2C8MkY7Co8","movie_trailer/x_7YlGv9u1g","movie_trailer/tL4McUzXfFI","kid/do6EgKG_YUo","kid/xqvN9yJeyO0","kid/J9IdcVG0Z-s","kid/NzYv8EXs2W8","music_video/OPf0YbXqDm0","music_video/YQHsXMglC9A","music_video/iS1g8G_njx8"]
         do_rm = True
         do_rm = False
         for video_name in video_names:
@@ -79,10 +82,17 @@ if opt[0] == '0':
             else:
                 for i in range(0, num_im, step)[job_id::job_num]:
                     sn = Do2 + '/%05d.png' % (1+i)
-                    if True: #not os.path.exists(sn):
+                    tmp = imread(sn)
+                    if tmp.max() == 0:
+                    #if not os.path.exists(sn):
                         sn2 = Ds2 % (i//step)
                         if os.path.exists(sn2):
+                            print('copy ', i)
                             shutil.copyfile(sn2, sn)
+                            # remove seg_ds for redo
+                            oo = Dw+'seg_ds/'+video_name+'/r_seg_%05d.png'%(1+i)
+                            if os.path.exists(oo):
+                                os.remove(oo)
                         else:
                             imwrite(sn, black)
     elif opt == '0.2': # check number
@@ -443,3 +453,7 @@ elif opt[0] == '3':
                 seg[seg==2]=3
             out = (255.*label2rgb(seg, colors=clr)).astype(np.uint8)
             imwrite('db/fig1/out_%d.png'%i, out)
+elif opt[0] == '9':
+    if opt == '9': # info txt
+        aa = readtxt(Dv + 'release/info/cvpr2022_all.txt')
+        writetxt(Dv + 'release/info/cvpr2022_all_sorted.txt', sorted(aa))
